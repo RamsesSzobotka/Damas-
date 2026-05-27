@@ -40,7 +40,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen" style={{ backgroundColor: '#0A0A0F', color: '#FFFFFF' }}>
+      <body className="min-h-screen" style={{ backgroundColor: '#0B0D2B', color: '#FFFFFF' }}>
         {children}
         <Scripts />
       </body>

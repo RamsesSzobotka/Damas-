@@ -5,18 +5,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bg-primary': '#0A0A0F',
-        'bg-secondary': '#1C1C24',
-        'accent-red': '#E31C2B',
-        'accent-red-light': '#FF4D5C',
-        'gold': '#FFD700',
-        'gold-dark': '#B8960F',
+        'space-dark': '#0B0D2B',
+        'space-panel': '#1E2547',
+        'accent-magenta': '#C026D3',
+        'accent-gold': '#FFD700',
+        'accent-cyan': '#67E8F9',
         'text-primary': '#FFFFFF',
-        'text-secondary': '#B0B0C8',
-        'piece-highlight': '#FF9E9E',
+        'text-space': '#B0E0FF',
+        'player-red': '#FF4D6B',
+        'player-white': '#F0F8FF',
       },
       fontFamily: {
         pixel: ['"Press Start 2P"', 'monospace'],
+        mono: ['VT323', 'monospace'],
       },
     },
   },
