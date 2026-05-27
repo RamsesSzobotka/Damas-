@@ -10,6 +10,7 @@ const IA_SERVICE_URL = process.env.IA_SERVICE_URL || 'http://localhost:3002'
 export interface AIMoveResponse {
   from: [number, number]
   to: [number, number]
+  captured?: [number, number][]
 }
 
 /**

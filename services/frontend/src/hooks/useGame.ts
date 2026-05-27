@@ -68,6 +68,7 @@ export function useGame(difficulty: string) {
   const [isLoading, setIsLoading] = useState(initialState.isLoading)
   const [error, setErrorLocal] = useState(initialState.error)
   const [currentPlayer, setCurrentPlayerLocal] = useState(initialState.currentPlayer)
+  const [forcedPiece, setForcedPiece] = useState<[number, number] | null>(null)
 
   useEffect(() => {
     const unsubscribe = useGameStore.subscribe((state) => {
@@ -182,16 +183,30 @@ export function useGame(difficulty: string) {
           break
         case 'move_applied':
           setBoard(data.board as number[][])
-          setCurrentPlayer(2)
+          if (typeof data.nextPlayer === 'number') {
+            setCurrentPlayer(data.nextPlayer as number)
+          }
+
+          if (Array.isArray(data.forcedPiece)) {
+            setForcedPiece(data.forcedPiece as [number, number])
+            setSelectedPiece(data.forcedPiece as [number, number])
+          } else {
+            setForcedPiece(null)
+            setSelectedPiece(null)
+          }
           break
         case 'ai_move':
           setBoard(data.board as number[][])
-          setCurrentPlayer(1)
+          setCurrentPlayer((data.nextPlayer as number) || 1)
+          setForcedPiece(null)
+          setSelectedPiece(null)
           break
         case 'game_over':
           setBoard(data.board as number[][])
           setStatus('gameOver')
           setResult((data.result as string) || 'Game Over')
+          setForcedPiece(null)
+          setSelectedPiece(null)
           break
         case 'error':
           setError((data.message as string) || 'An error occurred')
@@ -211,6 +226,10 @@ export function useGame(difficulty: string) {
       const state = useGameStore.getState()
 
       if (state.status !== 'playing' || state.currentPlayer !== 1) return
+
+      if (forcedPiece && (forcedPiece[0] !== row || forcedPiece[1] !== col)) {
+        return
+      }
 
       const piece = state.board[row][col]
 
@@ -256,7 +275,7 @@ export function useGame(difficulty: string) {
 
       setSelectedPiece(null)
     },
-    [selectedPiece, setError, setSelectedPiece, ws],
+    [forcedPiece, selectedPiece, setError, setSelectedPiece, ws],
   )
 
   return {

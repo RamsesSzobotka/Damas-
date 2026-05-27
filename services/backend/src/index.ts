@@ -81,13 +81,10 @@ const server = Bun.serve<{ gameId: string }>({
       try {
         const game = await getGame(gameId)
         if (game) {
-          // Determinar de quién es el turno
-          const currentPlayer = game.playerMoves <= game.aiMoves ? 1 : 2
-
           ws.send(JSON.stringify({
             type: 'game_state',
             board: game.board,
-            currentPlayer,
+            currentPlayer: game.currentPlayer ?? 1,
             status: game.status,
             gameId,
           }))
@@ -121,12 +118,15 @@ const server = Bun.serve<{ gameId: string }>({
             type: 'move_applied',
             board: result.board,
             lastMove: result.lastMove,
+            nextPlayer: result.nextPlayer,
+            forcedPiece: result.forcedPiece,
           })
 
           if (result.aiMove) {
             broadcastToGame(gameId, {
               type: 'ai_move',
               board: result.board,
+              nextPlayer: 1,
               lastMove: {
                 from: result.aiMove.from,
                 to: result.aiMove.to,

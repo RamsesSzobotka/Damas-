@@ -18,6 +18,7 @@ export const GameSchema = z.object({
   userId: z.instanceof(ObjectId), // Referencia a User
   difficulty: z.enum(['beginner', 'intermediate', 'master', 'ultra']),
   status: z.enum(['active', 'completed', 'abandoned']).default('active'),
+  currentPlayer: z.number().min(1).max(2).default(1),
   result: z.enum(['victory', 'defeat', 'draw']).optional(),
   
   // Estado del tablero

@@ -30,6 +30,7 @@ calculateRoute.post('/calculate-move', async (c) => {
     return c.json({
       from: move.from,
       to: move.to,
+      captured: move.captured,
     })
   } catch (error) {
     return c.json({ error: 'Internal server error' }, 500)

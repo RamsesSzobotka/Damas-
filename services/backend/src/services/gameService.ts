@@ -44,20 +44,27 @@ function createInitialBoard(): number[][] {
 function applyMoveToBoard(
   board: number[][],
   from: [number, number],
-  to: [number, number]
+  to: [number, number],
+  capturedPieces: [number, number][] = []
 ): number[][] {
   const newBoard = board.map((row) => [...row])
   const piece = newBoard[from[0]][from[1]]
   newBoard[from[0]][from[1]] = 0
   newBoard[to[0]][to[1]] = piece
 
-  // Detectar captura (punto medio entre from y to)
-  const midRow = (from[0] + to[0]) / 2
-  const midCol = (from[1] + to[1]) / 2
-  if (Number.isInteger(midRow) && Number.isInteger(midCol)) {
-    const capturedPiece = newBoard[midRow][midCol]
-    if (capturedPiece !== 0) {
-      newBoard[midRow][midCol] = 0
+  if (capturedPieces.length > 0) {
+    for (const [capturedRow, capturedCol] of capturedPieces) {
+      newBoard[capturedRow][capturedCol] = 0
+    }
+  } else {
+    // Detectar captura (punto medio entre from y to)
+    const midRow = (from[0] + to[0]) / 2
+    const midCol = (from[1] + to[1]) / 2
+    if (Number.isInteger(midRow) && Number.isInteger(midCol)) {
+      const capturedPiece = newBoard[midRow][midCol]
+      if (capturedPiece !== 0) {
+        newBoard[midRow][midCol] = 0
+      }
     }
   }
 
@@ -83,6 +90,7 @@ export async function createGame(
     userId: new ObjectId(), // Placeholder para partidas anónimas (V1)
     difficulty,
     status: 'active' as const,
+    currentPlayer: 1,
     board,
     moves: [],
     totalMoves: 0,
@@ -132,6 +140,8 @@ export async function handlePlayerMove(
   lastMove: { from: [number, number]; to: [number, number]; player: string }
   gameOver?: boolean
   result?: string
+  nextPlayer?: number
+  forcedPiece?: [number, number]
   aiMove?: { from: [number, number]; to: [number, number] }
 }> {
   const collection = getDatabase().getCollection(GAME_COLLECTION)
@@ -146,12 +156,62 @@ export async function handlePlayerMove(
   }
 
   // Validar que sea el turno del jugador
-  if (game.playerMoves > game.aiMoves) {
+  if (game.currentPlayer !== 1) {
     throw new Error('Not your turn')
   }
 
   // Aplicar movimiento del jugador
+  const movedPiece = game.board[from[0]][from[1]]
   let currentBoard = applyMoveToBoard(game.board as number[][], from, to)
+  const pieceAfterMove = currentBoard[to[0]][to[1]]
+  const isCapture = Math.abs(from[0] - to[0]) === 2
+  const promotedThisMove = movedPiece === 1 && to[0] === 0
+
+  const canContinueCapture = (board: number[][], row: number, col: number): boolean => {
+    const piece = board[row][col]
+    if (piece === 0) return false
+
+    const isKing = piece === 3 || piece === 4
+    const isPlayerPiece = piece === 1 || piece === 3
+    const directions: [number, number][] = []
+
+    if (isKing || isPlayerPiece) {
+      directions.push([-1, -1], [-1, 1])
+    }
+    if (isKing || piece === 2 || piece === 4) {
+      directions.push([1, -1], [1, 1])
+    }
+
+    for (const [dr, dc] of directions) {
+      const enemyRow = row + dr
+      const enemyCol = col + dc
+      const landRow = row + 2 * dr
+      const landCol = col + 2 * dc
+
+      if (
+        enemyRow >= 0 &&
+        enemyRow < BOARD_SIZE &&
+        enemyCol >= 0 &&
+        enemyCol < BOARD_SIZE &&
+        landRow >= 0 &&
+        landRow < BOARD_SIZE &&
+        landCol >= 0 &&
+        landCol < BOARD_SIZE
+      ) {
+        const enemyPiece = board[enemyRow][enemyCol]
+        const landingPiece = board[landRow][landCol]
+        const sameSide = (piece === 1 || piece === 3)
+          ? (enemyPiece === 1 || enemyPiece === 3)
+          : (enemyPiece === 2 || enemyPiece === 4)
+
+        if (!sameSide && enemyPiece !== 0 && landingPiece === 0) {
+          return true
+        }
+      }
+    }
+
+    return false
+  }
 
   // Registrar movimiento del jugador
   const playerMoveRecord = {
@@ -160,8 +220,110 @@ export async function handlePlayerMove(
     movedAt: new Date(),
   }
 
+  const playerCanContinue =
+    isCapture && !promotedThisMove && canContinueCapture(currentBoard, to[0], to[1])
+
+  if (playerCanContinue) {
+    const gameOverCheck = await checkGameOver(currentBoard)
+
+    const $set: Record<string, unknown> = {
+      board: currentBoard,
+      currentPlayer: 1,
+      updatedAt: new Date(),
+    }
+
+    const $inc: Record<string, number> = {
+      totalMoves: 1,
+      playerMoves: 1,
+    }
+
+    if (gameOverCheck.over) {
+      $set.status = 'completed'
+      $set.result = gameOverCheck.winner === 'player' ? 'victory' : 'defeat'
+      $set.completedAt = new Date()
+    }
+
+    await collection.updateOne(
+      { _id: new ObjectId(gameId) },
+      {
+        $set,
+        $push: { moves: { $each: [playerMoveRecord] } },
+        $inc,
+      } as any,
+    )
+
+    return {
+      board: currentBoard,
+      lastMove: { from, to, player: 'player' },
+      gameOver: gameOverCheck.over,
+      result: gameOverCheck.over ? (gameOverCheck.winner === 'player' ? 'victory' : 'defeat') : undefined,
+      nextPlayer: gameOverCheck.over ? undefined : 1,
+      forcedPiece: gameOverCheck.over ? undefined : to,
+    }
+  }
+
+  const gameOverAfterPlayer = await checkGameOver(currentBoard)
+  if (gameOverAfterPlayer.over) {
+    const $set: Record<string, unknown> = {
+      board: currentBoard,
+      currentPlayer: 1,
+      updatedAt: new Date(),
+      status: 'completed',
+      result: gameOverAfterPlayer.winner === 'player' ? 'victory' : 'defeat',
+      completedAt: new Date(),
+    }
+
+    await collection.updateOne(
+      { _id: new ObjectId(gameId) },
+      {
+        $set,
+        $push: { moves: { $each: [playerMoveRecord] } },
+        $inc: { totalMoves: 1, playerMoves: 1 },
+      } as any,
+    )
+
+    return {
+      board: currentBoard,
+      lastMove: { from, to, player: 'player' },
+      gameOver: true,
+      result: gameOverAfterPlayer.winner === 'player' ? 'victory' : 'defeat',
+    }
+  }
+
   // Solicitar movimiento a la IA
   const aiResponse = await calculateMove(currentBoard, 2) // currentPlayer=2 (IA)
+
+  if (!aiResponse) {
+    const aiStuck = await checkGameOver(currentBoard)
+    if (aiStuck.over) {
+      const $set: Record<string, unknown> = {
+        board: currentBoard,
+        currentPlayer: 1,
+        updatedAt: new Date(),
+        status: 'completed',
+        result: aiStuck.winner === 'player' ? 'victory' : 'defeat',
+        completedAt: new Date(),
+      }
+
+      await collection.updateOne(
+        { _id: new ObjectId(gameId) },
+        {
+          $set,
+          $push: { moves: { $each: [playerMoveRecord] } },
+          $inc: { totalMoves: 1, playerMoves: 1 },
+        } as any,
+      )
+
+      return {
+        board: currentBoard,
+        lastMove: { from, to, player: 'player' },
+        gameOver: true,
+        result: aiStuck.winner === 'player' ? 'victory' : 'defeat',
+      }
+    }
+
+    throw new Error('AI returned no move')
+  }
 
   const movesToPush: any[] = [playerMoveRecord]
   let aiMoveResult:
@@ -172,13 +334,19 @@ export async function handlePlayerMove(
 
   if (aiResponse) {
     // Aplicar movimiento de la IA
-    currentBoard = applyMoveToBoard(currentBoard, aiResponse.from, aiResponse.to)
+    currentBoard = applyMoveToBoard(
+      currentBoard,
+      aiResponse.from,
+      aiResponse.to,
+      aiResponse.captured,
+    )
     aiMoveResult = aiResponse
 
     const aiMoveRecord = {
       from: [aiResponse.from[0], aiResponse.from[1]],
       to: [aiResponse.to[0], aiResponse.to[1]],
       movedAt: new Date(),
+      capturedPieces: aiResponse.captured,
     }
     movesToPush.push(aiMoveRecord)
 
@@ -205,6 +373,7 @@ export async function handlePlayerMove(
   // Construir actualización de MongoDB
   const $set: Record<string, unknown> = {
     board: currentBoard,
+    currentPlayer: 1,
     updatedAt: new Date(),
   }
 

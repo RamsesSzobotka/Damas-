@@ -142,6 +142,7 @@ gameRoutes.get('/api/game/:gameId', async (c) => {
       gameId: game._id!.toString(),
       board: game.board,
       status: game.status,
+      currentPlayer: game.currentPlayer,
       difficulty: game.difficulty,
       moves: game.moves,
       playerMoves: game.playerMoves,
