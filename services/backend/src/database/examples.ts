@@ -3,6 +3,7 @@
  * Este archivo muestra cómo conectar y usar los modelos
  */
 
+import { ObjectId } from 'mongodb'
 import { initializeDatabase, getDatabase } from './Database'
 import {
   USER_COLLECTION,
@@ -131,7 +132,7 @@ export async function exampleGetUserGames(userId: string) {
   const gamesCollection = db.getCollection(GAME_COLLECTION)
 
   const games = await gamesCollection
-    .find({ userId: new (require('mongodb').ObjectId)(userId) })
+    .find({ userId: new ObjectId(userId) })
     .sort({ createdAt: -1 })
     .limit(20)
     .toArray()
@@ -164,7 +165,7 @@ export async function exampleGetUserInventory(userId: string) {
   const userSkinsCollection = db.getCollection(USER_SKIN_COLLECTION)
 
   const inventory = await userSkinsCollection
-    .find({ userId: new (require('mongodb').ObjectId)(userId) })
+    .find({ userId: new ObjectId(userId) })
     .toArray()
 
   console.log('Inventario del usuario:', inventory)
@@ -182,7 +183,6 @@ export async function exampleCreatePurchase(
 ) {
   const db = getDatabase()
   const purchasesCollection = db.getCollection(PURCHASE_COLLECTION)
-  const { ObjectId } = require('mongodb')
 
   const newPurchase = {
     userId: new ObjectId(userId),

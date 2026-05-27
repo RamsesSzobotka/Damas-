@@ -1,21 +1,21 @@
-FROM node:20-alpine
+FROM oven/bun:1.3
 
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
-COPY package*.json ./
+# Copiar package.json y bun.lock
+COPY package.json bun.lock ./
 
 # Instalar dependencias
-RUN npm ci
+RUN bun install --frozen-lockfile
 
 # Copiar código fuente
 COPY . .
 
 # Build
-RUN npm run build
+RUN bun run build
 
 # Exponer puerto
 EXPOSE 3000
 
 # Comando para iniciar
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]

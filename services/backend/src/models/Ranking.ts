@@ -8,7 +8,7 @@ import { ObjectId } from 'mongodb'
 
 export const RankingSchema = z.object({
   _id: z.instanceof(ObjectId).optional(),
-  userId: z.instanceof(ObjectId).unique('userId must be unique'), // Referencia única a User
+  userId: z.instanceof(ObjectId), // Referencia única a User (unique index en MongoDB)
   username: z.string(),
   totalPoints: z.number().default(0),
   rank: z.number().optional(), // Posición en el ranking

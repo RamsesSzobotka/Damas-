@@ -101,7 +101,8 @@ export class Database {
   }
 
   /**
-   * Crear índices para una colección
+   * Crear índices para una colección solo si no existen.
+   * MongoDB createIndex es idempotente, pero这一 verificación evita logs innecesarios.
    */
   private async createIndexes(
     collectionName: string,
@@ -109,14 +110,27 @@ export class Database {
   ): Promise<void> {
     try {
       const collection = this.db!.collection(collectionName)
+      const existingIndexes = await collection.indexes()
+      const existingKeys = existingIndexes.map((idx) =>
+        JSON.stringify(idx.key)
+      )
 
+      let created = 0
       for (const indexSpec of indexes) {
-        await collection.createIndex(indexSpec.key, {
-          unique: indexSpec.unique || false,
-        })
+        const keyStr = JSON.stringify(indexSpec.key)
+        if (!existingKeys.includes(keyStr)) {
+          await collection.createIndex(indexSpec.key, {
+            unique: indexSpec.unique || false,
+          })
+          created++
+        }
       }
 
-      console.log(`  ✓ Índices creados para: ${collectionName}`)
+      if (created > 0) {
+        console.log(`  ✓ ${created} índice(s) creado(s) para: ${collectionName}`)
+      } else {
+        console.log(`  ✓ Índices ya existen para: ${collectionName}`)
+      }
     } catch (error) {
       console.error(`  ✗ Error creando índices para ${collectionName}:`, error)
       throw error

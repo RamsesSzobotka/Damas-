@@ -6,7 +6,8 @@
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outfile dist/index.js",
     "start": "bun dist/index.js",
-    "type-check": "bun typecheck"
+    "typecheck": "tsc --noEmit",
+    "type-check": "bun run typecheck"
   },
   "dependencies": {
     "hono": "^3.12.0",

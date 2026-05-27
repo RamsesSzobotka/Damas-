@@ -89,7 +89,7 @@ services:
       - damas-network
     volumes:
       - ./frontend/src:/app/src
-    command: npm run dev
+    command: bun run dev
 
   # Nginx (Reverse Proxy - Opcional)
   nginx:
