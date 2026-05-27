@@ -19,18 +19,18 @@ const pixelFont = {
   MozOsxFontSmoothing: 'unset',
 } as React.CSSProperties
 
-interface MenuItem {
+interface Difficulty {
   icon: string
   label: string
-  action: 'play' | 'rankings' | 'shop' | 'customize'
-  description?: string
+  value: string
+  description: string
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  { icon: '▶', label: 'JUGAR', action: 'play', description: 'Nueva partida vs IA' },
-  { icon: '📊', label: 'RANKINGS', action: 'rankings', description: 'Tabla de puntuaciones' },
-  { icon: '🛍️', label: 'TIENDA', action: 'shop', description: 'Comprar skins' },
-  { icon: '🎨', label: 'PERSONALIZAR', action: 'customize', description: 'Fichas, tablero y animaciones' },
+const DIFFICULTIES: Difficulty[] = [
+  { icon: '🌌', label: 'PRINCIPIANTE', value: 'principiante', description: 'Movimientos simples, profundidad 1-2' },
+  { icon: '⚡', label: 'INTERMEDIO', value: 'intermedio', description: 'Evalúa capturas y defensa básica' },
+  { icon: '🧠', label: 'MASTER', value: 'master', description: 'Analiza múltiples escenarios (A*)' },
+  { icon: '👾', label: 'ULTRA', value: 'ultra', description: 'Optimización heurística avanzada' },
 ]
 
 function Stars() {
@@ -94,16 +94,16 @@ function Stars() {
   )
 }
 
-interface CosmicButtonProps {
+interface DifficultyButtonProps {
   icon: string
   label: string
-  description?: string
+  description: string
   onClick: () => void
   isActive?: boolean
-  index?: number
+  index: number
 }
 
-function CosmicButton({ icon, label, description, onClick, isActive, index = 0 }: CosmicButtonProps) {
+function DifficultyButton({ icon, label, description, onClick, isActive, index }: DifficultyButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
@@ -121,54 +121,51 @@ function CosmicButton({ icon, label, description, onClick, isActive, index = 0 }
     <div
       style={{
         animation: 'float 3s ease-in-out infinite',
-        animationDelay: `${0.8 + index * 0.4}s`,
+        animationDelay: `${0.3 + index * 0.25}s`,
       }}
     >
-    <button
-      onClick={onClick}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseLeave={() => {
-        setIsHovered(false)
-        setIsPressed(false)
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      className="w-64 group transition-all duration-200"
-      style={pixelFont}
-      aria-pressed={isActive}
-    >
-      <div
-        className="px-6 py-4 flex items-center gap-4"
-        style={{
-          backgroundColor: bgColor,
-          border: `2px solid ${isHovered ? COLORS.cyan : COLORS.magenta}`,
-          boxShadow: borderGlow,
-          cursor: 'pointer',
-          transform: isPressed ? 'scale(0.97)' : isHovered ? 'scale(1.03)' : 'scale(1)',
-          transition: 'transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease',
+      <button
+        onClick={onClick}
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => {
+          setIsHovered(false)
+          setIsPressed(false)
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        className="w-72 group transition-all duration-200"
+        style={pixelFont}
+        aria-pressed={isActive}
       >
-        <span
-          className="text-2xl"
+        <div
+          className="px-5 py-4 flex items-center gap-4"
           style={{
-            filter: isHovered ? 'drop-shadow(0 0 6px #67E8F9)' : 'none',
+            backgroundColor: bgColor,
+            border: `2px solid ${isHovered ? COLORS.cyan : COLORS.magenta}`,
+            boxShadow: borderGlow,
+            cursor: 'pointer',
+            transform: isPressed ? 'scale(0.97)' : isHovered ? 'scale(1.03)' : 'scale(1)',
+            transition: 'transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease',
           }}
         >
-          {icon}
-        </span>
-        <div className="flex-1 text-left">
-          <p
-            className="text-sm font-bold uppercase tracking-widest"
+          <span
+            className="text-3xl"
             style={{
-              color: isHovered ? COLORS.textWhite : COLORS.cyan,
-              textShadow: isHovered
-                ? `0 0 8px ${COLORS.cyan}`
-                : 'none',
+              filter: isHovered ? 'drop-shadow(0 0 6px #67E8F9)' : 'none',
             }}
           >
-            {label}
-          </p>
-          {description && (
+            {icon}
+          </span>
+          <div className="flex-1 text-left">
+            <p
+              className="text-sm font-bold uppercase tracking-widest"
+              style={{
+                color: isHovered ? COLORS.textWhite : COLORS.cyan,
+                textShadow: isHovered ? `0 0 8px ${COLORS.cyan}` : 'none',
+              }}
+            >
+              {label}
+            </p>
             <p
               className="text-xs uppercase tracking-wider opacity-80"
               style={{
@@ -179,25 +176,24 @@ function CosmicButton({ icon, label, description, onClick, isActive, index = 0 }
             >
               {description}
             </p>
-          )}
+          </div>
+          <span
+            className="text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            style={{ color: COLORS.gold, textShadow: `0 0 8px ${COLORS.gold}` }}
+          >
+            →
+          </span>
         </div>
-        <span
-          className="text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          style={{ color: COLORS.gold, textShadow: `0 0 8px ${COLORS.gold}` }}
-        >
-          →
-        </span>
-      </div>
-    </button>
+      </button>
     </div>
   )
 }
 
 const TITLE_LETTERS = ['D', 'A', 'M', 'A', 'S']
 
-function CosmicLogo() {
+function TitleLogo() {
   return (
-    <div className="text-center mb-10 space-y-3">
+    <div className="text-center mb-6">
       <h1
         className="text-4xl font-black uppercase tracking-widest flex justify-center gap-1"
         style={{
@@ -236,78 +232,27 @@ function CosmicLogo() {
       >
         Universe
       </p>
-      <div className="flex justify-center gap-2 pt-4">
-        {[...Array(8)].map((_, i) => (
-          <span
-            key={i}
-            className="text-xl"
-            style={{
-              color: i % 2 === 0 ? COLORS.magenta : COLORS.cyan,
-              textShadow: i % 2 === 0
-                ? `0 0 6px ${COLORS.magenta}`
-                : `0 0 6px ${COLORS.cyan}`,
-            }}
-          >
-            ⬜
-          </span>
-        ))}
-      </div>
     </div>
   )
 }
 
-function AuthButton() {
-  const [isHovered, setIsHovered] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
-
-  return (
-    <button
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false)
-        setIsPressed(false)
-      }}
-      className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-200"
-      style={{
-        backgroundColor: isPressed ? '#2A1B5E' : isHovered ? COLORS.magenta : COLORS.spacePanel,
-        border: `2px solid ${isHovered ? COLORS.cyan : COLORS.magenta}`,
-        color: isHovered ? COLORS.textWhite : COLORS.cyan,
-        boxShadow: isHovered ? `0 0 10px ${COLORS.cyan}` : `0 0 4px ${COLORS.magenta}`,
-        textShadow: isHovered ? `0 0 6px ${COLORS.cyan}` : 'none',
-        cursor: 'pointer',
-        transform: isPressed ? 'scale(0.95)' : 'scale(1)',
-        transition: 'transform 0.15s ease, background-color 0.2s ease',
-        ...pixelFont,
-      }}
-    >
-      👤 PERFIL
-    </button>
-  )
-}
-
-export default function MainMenu() {
+export default function DifficultySelect() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleMenuAction = async (action: MenuItem['action']) => {
+  const handleSelect = async (difficulty: string) => {
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 200))
-
-    const routes: Record<MenuItem['action'], string> = {
-      play: '/game/difficulty',
-      rankings: '/rankings',
-      shop: '/shop',
-      customize: '/customize',
-    }
-
     try {
-      await navigate({ to: routes[action] })
+      await navigate({ to: '/game/play', search: { difficulty } })
     } catch (error) {
       console.error('Navigation failed:', error)
       setIsLoading(false)
     }
+  }
+
+  const handleBack = () => {
+    navigate({ to: '/' })
   }
 
   return (
@@ -333,14 +278,40 @@ export default function MainMenu() {
       />
       <Stars />
 
+      {/* Back Button */}
       <div
-        className="absolute top-4 right-4 z-20"
+        className="absolute top-4 left-4 z-20"
         style={{
           animation: 'float 3s ease-in-out infinite',
-          animationDelay: '0.4s',
+          animationDelay: '0s',
         }}
       >
-        <AuthButton />
+        <button
+          onClick={handleBack}
+          onMouseDown={(e) => {
+            const target = e.currentTarget
+            target.style.transform = 'scale(0.95)'
+          }}
+          onMouseUp={(e) => {
+            const target = e.currentTarget
+            target.style.transform = 'scale(1)'
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget
+            target.style.transform = 'scale(1)'
+          }}
+          className="px-3 py-2 text-sm font-bold uppercase tracking-widest transition-all duration-200"
+          style={{
+            backgroundColor: COLORS.spacePanel,
+            border: `2px solid ${COLORS.magenta}`,
+            color: COLORS.cyan,
+            boxShadow: `0 0 4px ${COLORS.magenta}`,
+            cursor: 'pointer',
+            ...pixelFont,
+          }}
+        >
+          ← VOLVER
+        </button>
       </div>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">
@@ -350,17 +321,15 @@ export default function MainMenu() {
             animationDelay: '0s',
           }}
         >
-          <CosmicLogo />
+          <TitleLogo />
         </div>
 
         <div
           className="backdrop-blur-sm"
           style={{
-            animation: 'float 3s ease-in-out infinite',
-            animationDelay: '2.4s',
             borderRadius: '4px',
             border: `2px solid ${COLORS.magenta}`,
-            padding: '28px',
+            padding: '24px',
             boxShadow: `
               0 0 16px rgba(192, 38, 211, 0.3),
               0 0 32px rgba(103, 232, 249, 0.1),
@@ -369,14 +338,38 @@ export default function MainMenu() {
             backgroundColor: 'rgba(30, 37, 71, 0.6)',
           }}
         >
-          <div className="flex flex-col gap-3">
-            {MENU_ITEMS.map((item, i) => (
-              <CosmicButton
-                key={item.action}
-                icon={item.icon}
-                label={item.label}
-                description={item.description}
-                onClick={() => handleMenuAction(item.action)}
+          <div className="text-center mb-4">
+            <p
+              className="text-sm font-bold uppercase tracking-widest"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: COLORS.gold,
+                textShadow: `0 0 8px ${COLORS.gold}`,
+                ...pixelFont,
+              }}
+            >
+              SELECCIONA
+            </p>
+            <p
+              className="text-xs uppercase tracking-[0.2em] mt-1"
+              style={{
+                fontFamily: 'VT323, monospace',
+                color: COLORS.textSpace,
+                fontSize: '16px',
+              }}
+            >
+              DIFICULTAD
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 items-center">
+            {DIFFICULTIES.map((d, i) => (
+              <DifficultyButton
+                key={d.value}
+                icon={d.icon}
+                label={d.label}
+                description={d.description}
+                onClick={() => handleSelect(d.value)}
                 isActive={isLoading}
                 index={i}
               />
@@ -401,7 +394,7 @@ export default function MainMenu() {
                 fontSize: '16px',
               }}
             >
-              Cargando...
+              Iniciando partida...
             </p>
           </div>
         )}

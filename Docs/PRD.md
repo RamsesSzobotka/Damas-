@@ -204,6 +204,45 @@ Puntos = (Victorias × Base) × (1 - MovimientosExtra/Max) × DificultadMultipli
 
 ---
 
+## 7.5 Sistema de Personalización
+
+### 7.5.1 Descripción General
+El sistema de personalización permitirá a los jugadores modificar la apariencia visual del juego, incluyendo fichas, tablero y animaciones. Este módulo está diseñado para expansión futura con más opciones cosméticas.
+
+### 7.5.2 Categorías Personalizables
+
+| Categoría | Descripción | Estado |
+|-----------|-------------|--------|
+| **Fichas** | Color, textura, brillo y efecto de las piezas de ambos jugadores | Futuro |
+| **Tablero** | Color de casillas, bordes, textura de constelaciones, estilo de visor espacial | Futuro |
+| **Animaciones** | Estelas de movimiento, partículas de captura, efecto de coronación, transiciones de pantalla | Futuro |
+
+### 7.5.3 Tipos de Personalización
+
+- **Predefinidas** (gratuitas): Conjuntos de colores y efectos básicos desbloqueables por logros o niveles
+- **Premium** (tienda): Skins especiales adquiribles vía Stripe, integradas con el sistema de monetización existente
+
+### 7.5.4 Flujo de Usuario
+
+1. El jugador accede desde el menú principal → "Personalizar"
+2. Selecciona una categoría (Fichas / Tablero / Animaciones)
+3. Visualiza previsualización en tiempo real del cambio
+4. Aplica la personalización (si es gratuita) o la compra (si es premium)
+5. Los cambios se reflejan inmediatamente en el juego
+
+### 7.5.5 Integración con Sistema Existente
+
+- Las skins premium se almacenan en la colección `skins` de MongoDB (ver sección 14.4)
+- El inventario del usuario se gestiona en `userSkins` (ver sección 14.6)
+- Las compras pasan por Stripe (ver sección 7)
+- Las personalizaciones gratuitas se asocian al perfil del usuario (colección `users`, campo `settings`)
+
+### 7.5.6 Estado del Módulo
+
+> **Nota:** Esta funcionalidad está planificada para desarrollo futuro. Actualmente solo existe el botón de acceso en el menú principal. Las pantallas de personalización, lógica de aplicación y la integración con el juego se implementarán en una fase posterior.
+
+---
+
 ## 8. Tecnologías del Stack
 
 ### 8.1 Frontend

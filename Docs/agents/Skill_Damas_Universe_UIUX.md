@@ -112,6 +112,12 @@
 ## Fondo
 - Espacial sutil animado.
 
+## Animaciones de entrada / flotación
+- Logo, panel de menú, botones, perfil y footer flotan suavemente.
+- Stagger escalonado: logo (0s), perfil (0.2s), botones (0.15s × índice), panel (0.4s), footer (0.6s).
+- CSS `@keyframes float`: translateY(0) → translateY(-8px) → translateY(0), 3s ease-in-out, infinito.
+- Los botones detienen su flotación individual al hacer hover (se sobrepone la animación de hover).
+
 ## Opciones
 - New Game (vs Machine)
 - Difficulty
@@ -282,6 +288,12 @@
 ## Hover en botones
 - Glow cyan.
 - Leve escalado.
+
+## Flotación de elementos del menú
+- Logo, botones, perfil y footer flotan suavemente en ciclo infinito.
+- Cada elemento tiene un `animation-delay` escalonado (0s, 0.15s, 0.3s, etc.) para efecto cascada.
+- Animación CSS `@keyframes float` con translateY de 0 a -8px en 3s ease-in-out.
+- Aplicable a cualquier elemento del menú principal y pantallas secundarias.
 
 ## Movimiento de fichas
 - Estelas de partículas.
