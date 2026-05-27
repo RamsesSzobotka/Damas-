@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { initializeDatabase } from './database/Database'
+import { gameRoutes, addGameConnection, removeGameConnection, broadcastToGame } from '@/routes/game'
+import { getGame, handlePlayerMove } from '@/services/gameService'
 
 const app = new Hono()
 
@@ -20,6 +22,9 @@ app.get('/health', (c) => {
     timestamp: new Date().toISOString(),
   })
 })
+
+// Registrar rutas de juego (REST)
+app.route('/', gameRoutes)
 
 // Inicializar base de datos y arrancar servidor
 const PORT = parseInt(process.env.PORT || '3001')
@@ -43,10 +48,121 @@ async function start() {
 
 start()
 
-// Iniciar servidor HTTP con Bun
-Bun.serve({
-  fetch: app.fetch,
+// Iniciar servidor HTTP + WebSocket con Bun
+const server = Bun.serve<{ gameId: string }>({
   port: PORT,
+  fetch(req, server) {
+    const url = new URL(req.url)
+
+    // WebSocket upgrade para conexiones de juego
+    if (url.pathname === '/ws') {
+      const gameId = url.searchParams.get('gameId')
+      if (!gameId) {
+        return new Response('Missing gameId parameter', { status: 400 })
+      }
+
+      const success = server.upgrade(req, { data: { gameId } })
+      if (success) return
+      return new Response('WebSocket upgrade failed', { status: 400 })
+    }
+
+    // Todas las demás rutas pasan por Hono
+    return app.fetch(req)
+  },
+  websocket: {
+    /**
+     * Se ejecuta al abrirse una conexión WebSocket.
+     * Registra la conexión y envía el estado actual de la partida.
+     */
+    async open(ws) {
+      const { gameId } = ws.data
+      addGameConnection(gameId, ws)
+
+      try {
+        const game = await getGame(gameId)
+        if (game) {
+          // Determinar de quién es el turno
+          const currentPlayer = game.playerMoves <= game.aiMoves ? 1 : 2
+
+          ws.send(JSON.stringify({
+            type: 'game_state',
+            board: game.board,
+            currentPlayer,
+            status: game.status,
+            gameId,
+          }))
+        }
+      } catch (err) {
+        console.error('Error enviando estado inicial:', err)
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Error al cargar el estado del juego',
+        }))
+      }
+    },
+
+    /**
+     * Procesa mensajes entrantes desde el frontend.
+     * Tipos soportados: player_move
+     */
+    async message(ws, message) {
+      try {
+        const data = JSON.parse(message.toString())
+        const { gameId } = ws.data
+
+        if (data.type === 'player_move') {
+          const from: [number, number] = data.from
+          const to: [number, number] = data.to
+
+          const result = await handlePlayerMove(gameId, from, to)
+
+          // Notificar a todos los clientes de la partida
+          broadcastToGame(gameId, {
+            type: 'move_applied',
+            board: result.board,
+            lastMove: result.lastMove,
+          })
+
+          if (result.aiMove) {
+            broadcastToGame(gameId, {
+              type: 'ai_move',
+              board: result.board,
+              lastMove: {
+                from: result.aiMove.from,
+                to: result.aiMove.to,
+                player: 'ai',
+              },
+            })
+          }
+
+          if (result.gameOver) {
+            broadcastToGame(gameId, {
+              type: 'game_over',
+              result: result.result,
+              board: result.board,
+            })
+          }
+        }
+      } catch (error) {
+        const { gameId } = ws.data
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+        console.error('Error en mensaje WebSocket:', errorMessage)
+
+        broadcastToGame(gameId, {
+          type: 'error',
+          message: errorMessage,
+        })
+      }
+    },
+
+    /**
+     * Limpieza al cerrarse la conexión.
+     */
+    close(ws) {
+      const { gameId } = ws.data
+      removeGameConnection(gameId, ws)
+    },
+  },
 })
 
 console.log(`🚀 Backend escuchando en http://localhost:${PORT}`)

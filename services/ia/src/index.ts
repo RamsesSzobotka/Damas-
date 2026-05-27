@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { calculateRoute } from '@routes/calculateMove'
 
 const app = new Hono()
 
@@ -19,6 +20,9 @@ app.get('/health', (c) => {
     timestamp: new Date().toISOString(),
   })
 })
+
+// Routes
+app.route('/', calculateRoute)
 
 // Arrancar servidor
 const PORT = parseInt(process.env.PORT || '3002')
