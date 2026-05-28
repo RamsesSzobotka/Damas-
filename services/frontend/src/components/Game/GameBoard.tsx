@@ -18,6 +18,8 @@ interface Props {
     delayMs: number
     durationMs: number
   } | null
+  playerSkinColor?: string
+  playerSecondaryColor?: string
 }
 
 export default function GameBoard({
@@ -26,6 +28,8 @@ export default function GameBoard({
   onSquareClick,
   validMoves,
   moveAnimation,
+  playerSkinColor,
+  playerSecondaryColor,
 }: Props) {
   const moves = useMemo(
     () =>
@@ -70,6 +74,8 @@ export default function GameBoard({
               }
               isValidMove={validSet.has(`${rowIdx},${colIdx}`)}
               onClick={() => onSquareClick(rowIdx, colIdx)}
+              playerSkinColor={playerSkinColor}
+              playerSecondaryColor={playerSecondaryColor}
             />
           )
         }),
@@ -103,7 +109,7 @@ export default function GameBoard({
             }}
           >
             <div style={{ width: '80%', height: '80%' }}>
-              <Piece piece={moveAnimation.piece} />
+              <Piece piece={moveAnimation.piece} skinColor={playerSkinColor} secondaryColor={playerSecondaryColor} />
             </div>
           </div>
         </div>

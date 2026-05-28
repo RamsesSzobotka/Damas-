@@ -148,14 +148,16 @@ function applyMoveToBoard(
 /**
  * Crea una nueva partida con tablero inicial y dificultad especificada.
  * @param difficulty - Dificultad de la partida
+ * @param playerSkinId - ID de la skin equipada del jugador (opcional)
  * @returns gameId y tablero inicial
  */
 export async function createGame(
-  difficulty: string
+  difficulty: string,
+  playerSkinId?: string
 ): Promise<{ gameId: string; board: number[][] }> {
   const board = createInitialBoard()
 
-  const game = {
+  const game: Record<string, unknown> = {
     _id: new ObjectId(),
     userId: new ObjectId(), // Placeholder para partidas anónimas (V1)
     difficulty,
@@ -168,6 +170,10 @@ export async function createGame(
     aiMoves: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
+  }
+
+  if (playerSkinId) {
+    game.playerSkinId = new ObjectId(playerSkinId)
   }
 
   const collection = getDatabase().getCollection(GAME_COLLECTION)

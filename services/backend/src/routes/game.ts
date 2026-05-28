@@ -7,7 +7,12 @@
  */
 
 import { Hono } from 'hono'
+import { verifyToken } from '@clerk/backend'
+import { ObjectId } from 'mongodb'
 import { createGame, getGame } from '@/services/gameService'
+import { getDatabase } from '@/database/Database'
+import { USER_COLLECTION } from '@/models/User'
+import { USER_SKIN_COLLECTION } from '@/models/UserSkin'
 
 // ---------------------------------------------------------------------------
 // WebSocket Connection Management
@@ -117,8 +122,30 @@ gameRoutes.post('/api/game/create', async (c) => {
       return c.json({ error: 'Invalid difficulty' }, 400)
     }
 
-    const result = await createGame(mappedDifficulty)
-    return c.json(result, 201)
+    // Resolver skin equipada del usuario si está autenticado
+    let playerSkinId: string | undefined
+    const authHeader = c.req.header('Authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const payload = await verifyToken(authHeader.slice(7), {
+          secretKey: process.env.CLERK_SECRET_KEY || '',
+        })
+        const users = getDatabase().getCollection(USER_COLLECTION)
+        const user = await users.findOne({ clerkId: payload.sub })
+        if (user) {
+          const userSkinsCol = getDatabase().getCollection(USER_SKIN_COLLECTION)
+          const equipped = await userSkinsCol.findOne({ userId: user._id, isEquipped: true })
+          if (equipped) {
+            playerSkinId = equipped.skinId.toString()
+          }
+        }
+      } catch {
+        // Token inválido — se crea partida sin skin
+      }
+    }
+
+    const result = await createGame(mappedDifficulty, playerSkinId)
+    return c.json({ ...result, playerSkinId }, 201)
   } catch (error) {
     console.error('Error creating game:', error)
     return c.json({ error: 'Failed to create game' }, 500)

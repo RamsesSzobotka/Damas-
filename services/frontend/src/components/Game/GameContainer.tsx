@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useUser, useAuth } from '@clerk/tanstack-react-start'
 import { useGame } from '@/hooks/useGame'
 import { useGameStore } from '@/stores/gameStore'
 import GameBoard from '@/components/Game/GameBoard'
@@ -21,9 +22,15 @@ interface Props {
   difficulty: string
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 export default function GameContainer({ difficulty }: Props) {
   const navigate = useNavigate()
+  const { isSignedIn } = useUser()
+  const { getToken } = useAuth()
   const reset = useGameStore((s) => s.reset)
+  const [playerSkinColor, setPlayerSkinColor] = useState<string | undefined>()
+  const [playerSecondaryColor, setPlayerSecondaryColor] = useState<string | undefined>()
 
   const {
     board,
@@ -38,6 +45,27 @@ export default function GameContainer({ difficulty }: Props) {
     moveAnimation,
     moveHistory,
   } = useGame(difficulty)
+
+  // Fetch equipped skin
+  useEffect(() => {
+    if (!isSignedIn) return
+    ;(async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch(`${API_BASE}/api/shop/owned-skins`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const equipped = data.ownedSkins?.find((s: any) => s.isEquipped)
+          if (equipped) {
+            setPlayerSkinColor(equipped.primaryColor)
+            setPlayerSecondaryColor(equipped.secondaryColor)
+          }
+        }
+      } catch {}
+    })()
+  }, [isSignedIn, getToken])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -333,6 +361,8 @@ export default function GameContainer({ difficulty }: Props) {
                 onSquareClick={handleSquareClick}
                 validMoves={[]}
                 moveAnimation={moveAnimation}
+                playerSkinColor={playerSkinColor}
+                playerSecondaryColor={playerSecondaryColor}
               />
             ) : (
               <p

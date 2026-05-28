@@ -9,6 +9,8 @@ interface Props {
   isSelected: boolean
   isValidMove: boolean
   onClick: () => void
+  playerSkinColor?: string
+  playerSecondaryColor?: string
 }
 
 export default function BoardSquare({
@@ -18,6 +20,8 @@ export default function BoardSquare({
   isSelected,
   isValidMove,
   onClick,
+  playerSkinColor,
+  playerSecondaryColor,
 }: Props) {
   const isDark = (row + col) % 2 !== 0
 
@@ -42,7 +46,7 @@ export default function BoardSquare({
         outline: 'none',
       }}
     >
-      {piece !== 0 && <Piece piece={piece} />}
+      {piece !== 0 && <Piece piece={piece} skinColor={playerSkinColor} secondaryColor={playerSecondaryColor} />}
 
       {isValidMove && piece === 0 && (
         <div

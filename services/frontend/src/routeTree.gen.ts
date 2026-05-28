@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
+import { Route as CustomizeIndexRouteImport } from './routes/customize/index'
 import { Route as GamePlayRouteImport } from './routes/game/play'
 import { Route as GameDifficultyRouteImport } from './routes/game/difficulty'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const ShopIndexRoute = ShopIndexRouteImport.update({
   id: '/shop/',
   path: '/shop/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomizeIndexRoute = CustomizeIndexRouteImport.update({
+  id: '/customize/',
+  path: '/customize/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamePlayRoute = GamePlayRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/customize/': typeof CustomizeIndexRoute
   '/shop/': typeof ShopIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/customize': typeof CustomizeIndexRoute
   '/shop': typeof ShopIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/customize/': typeof CustomizeIndexRoute
   '/shop/': typeof ShopIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game/difficulty' | '/game/play' | '/shop/'
+  fullPaths: '/' | '/game/difficulty' | '/game/play' | '/customize/' | '/shop/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game/difficulty' | '/game/play' | '/shop'
-  id: '__root__' | '/' | '/game/difficulty' | '/game/play' | '/shop/'
+  to: '/' | '/game/difficulty' | '/game/play' | '/customize' | '/shop'
+  id:
+    | '__root__'
+    | '/'
+    | '/game/difficulty'
+    | '/game/play'
+    | '/customize/'
+    | '/shop/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameDifficultyRoute: typeof GameDifficultyRoute
   GamePlayRoute: typeof GamePlayRoute
+  CustomizeIndexRoute: typeof CustomizeIndexRoute
   ShopIndexRoute: typeof ShopIndexRoute
 }
 
@@ -83,6 +99,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop/'
       preLoaderRoute: typeof ShopIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customize/': {
+      id: '/customize/'
+      path: '/customize'
+      fullPath: '/customize/'
+      preLoaderRoute: typeof CustomizeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/game/play': {
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameDifficultyRoute: GameDifficultyRoute,
   GamePlayRoute: GamePlayRoute,
+  CustomizeIndexRoute: CustomizeIndexRoute,
   ShopIndexRoute: ShopIndexRoute,
 }
 export const routeTree = rootRouteImport
