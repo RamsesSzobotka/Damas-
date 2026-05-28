@@ -168,6 +168,7 @@ export default function GameContainer({ difficulty }: Props) {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
       }}
     >
       {/* Gradient overlay */}
@@ -285,7 +286,6 @@ export default function GameContainer({ difficulty }: Props) {
             <div style={{ display: 'grid', gap: '8px', color: COLORS.textSpace, fontFamily: 'VT323, monospace', fontSize: '15px' }}>
               <p>IA: {difficulty}</p>
               <p>Tiempo: {formatTime(elapsed)}</p>
-              <p>Capturas: visibles</p>
               <p>Jugador: {pieceCounts.player}</p>
               <p>IA: {pieceCounts.ai}</p>
             </div>
@@ -304,7 +304,7 @@ export default function GameContainer({ difficulty }: Props) {
                   cursor: 'pointer',
                 }}
               >
-                Menú
+                Rendirse
               </button>
               <button
                 onClick={handlePlayAgain}
@@ -394,19 +394,6 @@ export default function GameContainer({ difficulty }: Props) {
           </aside>
         </div>
       </main>
-
-      {/* Bottom bar — piece count */}
-      <div className="relative z-10 flex items-center justify-center px-4 py-3">
-        <p
-          style={{
-            fontFamily: 'VT323, monospace',
-            color: COLORS.textSpace,
-            fontSize: '16px',
-          }}
-        >
-          Tú: {pieceCounts.player} | IA: {pieceCounts.ai} | {turnLabel}
-        </p>
-      </div>
 
       {/* Game over overlay */}
       {status === 'gameOver' && (

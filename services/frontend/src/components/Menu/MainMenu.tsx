@@ -389,6 +389,7 @@ export default function MainMenu() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
         ...pixelFont,
       }}
     >

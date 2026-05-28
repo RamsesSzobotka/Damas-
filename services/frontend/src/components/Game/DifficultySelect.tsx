@@ -264,6 +264,7 @@ export default function DifficultySelect() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
         ...pixelFont,
       }}
     >
