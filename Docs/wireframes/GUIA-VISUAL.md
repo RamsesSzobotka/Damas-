@@ -95,40 +95,40 @@
 
 ```
 FONDOS:
-#1A1A2E  - Fondo principal (azul muy oscuro)
-#16213E  - Panel/Card (azul oscuro)
-#0F3460  - Panel oscuro/Footer (azul medio oscuro)
+#0B0D2B  - Fondo principal (espacio profundo)
+#1E2547  - Panel/Card (visor espacial)
+#0E1233  - Panel oscuro/Footer (azul cósmico)
 
 BOTONES PRIMARIOS:
-#33AA33  - Verde (Jugar, Confirmar)
-#44BB44  - Verde claro (Hover)
-#228822  - Verde oscuro (Pressed)
+#FFD700  - Dorado galáctico (Jugar, Confirmar)
+#67E8F9  - Cyan espacial (Hover)
+#C026D3  - Magenta cósmico (Pressed / acento)
 
 BOTONES SECUNDARIOS:
-#CC3333  - Rojo (Cancelar, Deshacer)
-#FF4444  - Rojo claro (Hover)
-#AA2222  - Rojo oscuro (Pressed)
+#FF4D6B  - Rojo cósmico (Cancelar, Deshacer)
+#B91C3C  - Rojo claro (Hover)
+#7F1D1D  - Rojo oscuro (Pressed)
 
 TEXTO:
 #FFFFFF  - Blanco (primario)
-#CCCCCC  - Gris claro (secundario)
-#999999  - Gris oscuro (terciario/disabled)
+#B0E0FF  - Azul claro espacial (secundario)
+#9CA3AF  - Gris oscuro (terciario/disabled)
 
 ACENTOS:
-#FFAA00  - Naranja (highlights)
-#FF4444  - Rojo (errores)
-#33AA33  - Verde (éxito)
+#FFD700  - Dorado (highlights)
+#67E8F9  - Cyan (interacciones)
+#FF4D6B  - Rojo (errores)
 
 DIFICULTADES:
-🟢 Principiante: #33AA33 (Verde)
-🟡 Intermedio: #FFAA00 (Naranja)
-🔴 Master: #FF4444 (Rojo)
-⚫ Ultra: #666666 (Gris)
+🟢 Principiante: #67E8F9 (Cyan)
+🟡 Intermedio: #FFD700 (Dorado)
+🔴 Master: #C026D3 (Magenta)
+⚫ Ultra: #F0F8FF (Blanco estelar)
 
 TABLERO:
-Casilla clara: #F5E6D3 (Crema)
-Casilla oscura: #2A1810 (Marrón oscuro)
-Borde activo: #FFAA00 (Naranja)
+Casilla clara: #1E2547 (Panel claro)
+Casilla oscura: #0B0D2B (Espacio profundo)
+Borde activo: #67E8F9 (Cyan)
 ```
 
 ---
@@ -186,14 +186,14 @@ Borde: 2px base color
 Fondo: Panel color
 
 HOVER:
-Borde: 2px accent color (#FFAA00)
+Borde: 2px accent color (#67E8F9)
 Fondo: +5% brillo
 Transform: scale(1.02)
 Duración: 100ms ease-out
 
 SELECTED:
 Borde: 3px accent color
-Box-shadow: 0 0 8px #FFAA00
+Box-shadow: 0 0 8px #FFD700
 Transform: scale(1.0)
 ```
 
@@ -208,12 +208,12 @@ Transform: scale(1.0)
 ```
 ❌ SIN AUTENTICAR:
 Botón: "LOGIN / SIGN UP"
-Color: #33AA33 (Verde)
+Color: #67E8F9 (Cyan espacial)
 Acción: Click → Abre modal Clerk
 
 ✅ AUTENTICADO:
 Muestra: 👤 NombreUsuario ▼
-Color: #CCCCCC
+Color: #B0E0FF
 Acción: Click → Dropdown menu
   ├─ Ver Perfil
   ├─ Configuración

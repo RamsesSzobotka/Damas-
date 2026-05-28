@@ -39,6 +39,22 @@ function getDirections(color: number, king: boolean): [number, number][] {
   return dirs
 }
 
+function isOpponentPiece(piece: number, color: number): boolean {
+  if (piece === EMPTY) return false
+
+  if (color === PLAYER) {
+    return piece === AI || piece === AI_KING
+  }
+
+  return piece === PLAYER || piece === PLAYER_KING
+}
+
+function promoteIfNeeded(piece: number, row: number): number {
+  if (piece === PLAYER && row === 0) return PLAYER_KING
+  if (piece === AI && row === BOARD_SIZE - 1) return AI_KING
+  return piece
+}
+
 // ─── Logical helpers ──────────────────────────────────────────────
 
 /** Returns all possible captures for a piece at (row, col), including multi-capture chains. */
@@ -52,35 +68,70 @@ export function getCaptures(board: Board, row: number, col: number): Move[] {
   const results: Move[] = []
 
   for (const [dr, dc] of directions) {
-    const enemyRow = row + dr
-    const enemyCol = col + dc
-    const landRow = row + 2 * dr
-    const landCol = col + 2 * dc
+    if (king) {
+      let enemyRow = -1
+      let enemyCol = -1
+      let enemySeen = false
 
-    if (!isInBounds(landRow, landCol)) continue
+      for (let step = 1; ; step++) {
+        const scanRow = row + step * dr
+        const scanCol = col + step * dc
 
-    const enemyPiece = board[enemyRow][enemyCol]
-    if (enemyPiece === EMPTY) continue
-    if (getPieceColor(enemyPiece) === color) continue
-    if (board[landRow][landCol] !== EMPTY) continue
+        if (!isInBounds(scanRow, scanCol)) break
 
-    // In American checkers, when a piece reaches the king row the turn ends
-    const reachesPromotion =
-      (color === PLAYER && landRow === 0) ||
-      (color === AI && landRow === BOARD_SIZE - 1)
+        const cell = board[scanRow][scanCol]
 
-    if (reachesPromotion) {
-      results.push({
-        from: [row, col],
-        to: [landRow, landCol],
-        captured: [[enemyRow, enemyCol]],
-      })
+        if (!enemySeen) {
+          if (cell === EMPTY) continue
+          if (!isOpponentPiece(cell, color)) break
+
+          enemySeen = true
+          enemyRow = scanRow
+          enemyCol = scanCol
+          continue
+        }
+
+        if (cell !== EMPTY) break
+
+        const temp = cloneBoard(board)
+        temp[row][col] = EMPTY
+        temp[enemyRow][enemyCol] = EMPTY
+        temp[scanRow][scanCol] = piece
+
+        const chain = getCaptures(temp, scanRow, scanCol)
+
+        if (chain.length > 0) {
+          for (const c of chain) {
+            results.push({
+              from: [row, col],
+              to: c.to,
+              captured: [[enemyRow, enemyCol], ...(c.captured || [])],
+            })
+          }
+        } else {
+          results.push({
+            from: [row, col],
+            to: [scanRow, scanCol],
+            captured: [[enemyRow, enemyCol]],
+          })
+        }
+      }
     } else {
-      // Build temporary board to explore chain captures
+      const enemyRow = row + dr
+      const enemyCol = col + dc
+      const landRow = row + 2 * dr
+      const landCol = col + 2 * dc
+
+      if (!isInBounds(landRow, landCol)) continue
+
+      const enemyPiece = board[enemyRow][enemyCol]
+      if (!isOpponentPiece(enemyPiece, color)) continue
+      if (board[landRow][landCol] !== EMPTY) continue
+
       const temp = cloneBoard(board)
-      temp[landRow][landCol] = piece
       temp[row][col] = EMPTY
       temp[enemyRow][enemyCol] = EMPTY
+      temp[landRow][landCol] = promoteIfNeeded(piece, landRow)
 
       const chain = getCaptures(temp, landRow, landCol)
 
@@ -116,16 +167,31 @@ function getSimpleMoves(board: Board, row: number, col: number): Move[] {
   const results: Move[] = []
 
   for (const [dr, dc] of directions) {
-    const toRow = row + dr
-    const toCol = col + dc
+    if (king) {
+      for (let step = 1; ; step++) {
+        const toRow = row + step * dr
+        const toCol = col + step * dc
 
-    if (!isInBounds(toRow, toCol)) continue
-    if (board[toRow][toCol] !== EMPTY) continue
+        if (!isInBounds(toRow, toCol)) break
+        if (board[toRow][toCol] !== EMPTY) break
 
-    results.push({
-      from: [row, col],
-      to: [toRow, toCol],
-    })
+        results.push({
+          from: [row, col],
+          to: [toRow, toCol],
+        })
+      }
+    } else {
+      const toRow = row + dr
+      const toCol = col + dc
+
+      if (!isInBounds(toRow, toCol)) continue
+      if (board[toRow][toCol] !== EMPTY) continue
+
+      results.push({
+        from: [row, col],
+        to: [toRow, toCol],
+      })
+    }
   }
 
   return results

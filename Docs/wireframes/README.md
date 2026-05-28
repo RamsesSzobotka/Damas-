@@ -57,13 +57,13 @@ Estrategia de login ubicado estratégicamente:
 
 1. **No Autenticado:**
    - Botón: "LOGIN / SIGN UP"
-   - Color: #33AA33 (Verde)
+   - Color: #67E8F9 (Cyan espacial)
    - Tamaño: 24px altura
 
 2. **Autenticado:**
    - Muestra: Avatar (16x16) + Nombre usuario (8px)
    - Menú dropdown: Perfil, Logout
-   - Color: #CCCCCC (Gris claro)
+   - Color: #B0E0FF (Azul claro espacial)
 
 ### Flujo:
 ```
@@ -102,17 +102,17 @@ Click Login → Modal de Clerk → Redirecciona dashboard
 ┌──────────────────┐
 │  TEXTO BOTÓN     │
 └──────────────────┘
-Color: #33AA33 (Normal)
-Hover: #44BB44
-Pressed: #228822
+Color: #FFD700 (Normal)
+Hover: #67E8F9
+Pressed: #C026D3
 Borde: 2px relief 3D
 ```
 
 ### Panel (Fondo)
 
 ```
-Color: #1A1A2E (Principal)
-Borde: 2px #33AA33
+Color: #0B0D2B (Principal)
+Borde: 2px #67E8F9
 Sombra: 2px offset #000000 (50% opacity)
 Padding: 16px
 ```
@@ -120,9 +120,9 @@ Padding: 16px
 ### Header (Encabezado)
 
 ```
-Fondo: #0F3460
+Fondo: #1E2547
 Fuente: 16px bold, #FFFFFF
-Borde inferior: 2px #33AA33
+Borde inferior: 2px #67E8F9
 Alto: 40px
 ```
 
@@ -180,20 +180,20 @@ Ver archivos individuales:
 
 ```
 PRIMARIOS:
-#1A1A2E (Azul muy oscuro - fondos)
-#33AA33 (Verde - botones principales)
+#0B0D2B (Espacio profundo - fondos)
+#FFD700 (Dorado - botones principales)
 
 SECUNDARIOS:
-#0F3460 (Azul oscuro - panels)
-#16213E (Azul oscuro alt - contrast)
+#0E1233 (Azul cósmico - panels)
+#1E2547 (Visor espacial - contrast)
 
 TEXTO:
 #FFFFFF (Blanco - primario)
-#CCCCCC (Gris claro - secundario)
+#B0E0FF (Azul claro espacial - secundario)
 
 ACENTOS:
-#FFAA00 (Naranja - highlights)
-#FF4444 (Rojo - errores/delete)
+#FFD700 (Dorado - highlights)
+#FF4D6B (Rojo - errores/delete)
 ```
 
 ---

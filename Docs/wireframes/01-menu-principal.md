@@ -72,7 +72,7 @@
 │                              │
 │ ❌ SIN AUTENTICAR:           │
 │ ┌────────────────────────┐   │
-│ │ [LOGIN / SIGN UP]      │   │ ← Botón verde #33AA33
+│ │ [LOGIN / SIGN UP]      │   │ ← Botón cyan #67E8F9
 │ └────────────────────────┘   │
 │                              │
 │ ✅ AUTENTICADO:              │
@@ -84,8 +84,8 @@
 └──────────────────────────────┘
 
 ESTADOS:
-- Normal: #CCCCCC texto, fondo transparent
-- Hover: Fondo #16213E (0.3 opacity)
+- Normal: #B0E0FF texto, fondo transparent
+- Hover: Fondo #1E2547 (0.3 opacity)
 - Clicked: Mostrar dropdown con opciones
   ├─ Ver Perfil
   ├─ Configuración
@@ -110,7 +110,7 @@ ESTADOS:
 Dimensiones:
 - Logo: 64x64px
 - Título: 24px font, #FFFFFF
-- Subtitle: 12px font, #CCCCCC
+- Subtitle: 12px font, #B0E0FF
 - Spacing total: 80px alto
 ```
 
@@ -156,17 +156,17 @@ Dimensiones:
 
 ESTILOS BOTÓN:
 Normal:
-  - Fondo: #33AA33
+  - Fondo: #FFD700
   - Texto: #FFFFFF, 12px bold
   - Borde: 2px relief 3D (arriba-izq claro, abajo-der oscuro)
   
 Hover:
-  - Fondo: #44BB44 (+10% brillo)
+  - Fondo: #67E8F9 (+10% brillo)
   - Cursor: pointer
   - Efecto: Más brillo
   
 Pressed:
-  - Fondo: #228822
+  - Fondo: #C026D3
   - Borde: invertido (hundido)
   - Offset: 1px hacia abajo-derecha
 ```
@@ -181,9 +181,9 @@ Pressed:
 │  © 2026 Damas Digital                  │
 │  Desarrollado por: Equipo SDD IX       │
 │                                        │
-│  Fuente: 8px, #999999 (gris oscuro)   │
-│  Fondo: #0F3460 (panel oscuro)         │
-│  Borde superior: 1px #33AA33           │
+│  Fuente: 8px, #9CA3AF (gris oscuro)   │
+│  Fondo: #1E2547 (panel oscuro)         │
+│  Borde superior: 1px #67E8F9           │
 │  Alto: 32px                            │
 │  Padding: 8px                          │
 └────────────────────────────────────────┘
@@ -195,14 +195,14 @@ Pressed:
 
 | Elemento | Color | Hex | RGB |
 |----------|-------|-----|-----|
-| Fondo principal | Azul muy oscuro | #1A1A2E | 26,26,46 |
-| Botones normal | Verde | #33AA33 | 51,170,51 |
-| Botones hover | Verde claro | #44BB44 | 68,187,68 |
-| Botones pressed | Verde oscuro | #228822 | 34,136,34 |
+| Fondo principal | Espacio profundo | #0B0D2B | 11,13,43 |
+| Botones normal | Dorado | #FFD700 | 255,215,0 |
+| Botones hover | Cyan espacial | #67E8F9 | 103,232,249 |
+| Botones pressed | Magenta cósmico | #C026D3 | 192,38,211 |
 | Texto principal | Blanco | #FFFFFF | 255,255,255 |
-| Texto secundario | Gris claro | #CCCCCC | 204,204,204 |
-| Borde activo | Naranja | #FFAA00 | 255,170,0 |
-| Panel oscuro | Azul oscuro | #0F3460 | 15,52,96 |
+| Texto secundario | Azul claro espacial | #B0E0FF | 176,224,255 |
+| Borde activo | Cyan | #67E8F9 | 103,232,249 |
+| Panel oscuro | Azul cósmico | #1E2547 | 30,37,71 |
 
 ---
 
@@ -273,7 +273,7 @@ NO AUTENTICADO:
 
 AUTENTICADO:
 1. Click → Dropdown menu
-2. Hover opciones → Highlight #16213E
+2. Hover opciones → Highlight #1E2547
 3. Click opción → Confirmar/Ejecutar
 ```
 
@@ -377,7 +377,7 @@ AUTENTICADO:
 ```
 Ubicación: Esquina superior derecha
 ┌────────────────────────┐
-│ [LOGIN / SIGN UP]      │ ← Verde #33AA33
+│ [LOGIN / SIGN UP]      │ ← Cyan #67E8F9
 │ 40px altura × 180px    │
 └────────────────────────┘
 
@@ -407,7 +407,7 @@ Después de login exitoso:
 Ubicación: Esquina superior derecha
 ┌──────────────────────────────┐
 │ 👤 JugadorPro123 ▼           │
-│ Hover: Fondo #16213E         │
+│ Hover: Fondo #1E2547         │
 │ Click: Muestra dropdown       │
 └──────────────────────────────┘
 

@@ -56,9 +56,9 @@ Filtro por dificultad:
 [Todos] [Principiante] [Intermedio] [Master] [Ultra]
 
 Estilos:
-- Tab activo: #33AA33 borde inferior 2px
-- Tab normal: #999999
-- Hover: #CCCCCC
+- Tab activo: #67E8F9 borde inferior 2px
+- Tab normal: #9CA3AF
+- Hover: #B0E0FF
 - Transición: 100ms ease
 ```
 
@@ -78,7 +78,7 @@ Medallas (Top 3):
 - #3: 🥉 Bronce
 
 Fila del jugador:
-- Highlight: Fondo #0F3460 + borde izquierdo 3px #FFAA00
+- Highlight: Fondo #1E2547 + borde izquierdo 3px #FFD700
 - Etiqueta: ⭐ "Tu posición"
 
 Rows altura: 32px

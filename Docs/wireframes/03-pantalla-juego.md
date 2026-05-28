@@ -24,7 +24,7 @@
 │   │ IA: Master   │      │   ├─┼─┼─┼─┤   │     │ Movimientos: │ │
 │   │ Tiempo: 0.2s │      │   ├─┼─┼─┼─┤   │     │              │ │
 │   │              │      │   ├─┼─┼─┼─┤   │     │ 1. R5→R4 x   │ │
-│   │ [♻ Deshacer] │      │   ├─┼─┼─┼─┤   │     │ 2. I3→I4 ●   │ │
+│   │              │      │   ├─┼─┼─┼─┤   │     │ 2. I3→I4 ●   │ │
 │   │ [⚙ Opciones]│      │   ├─┼─┼─┼─┤   │     │ 3. R4→R3 x   │ │
 │   │ [❌ Salir]   │      │   ├─┼─┼─┼─┤   │     │ 4. I4→I5 ●   │ │
 │   │              │      │   └─┴─┴─┴─┘   │     │              │ │
@@ -77,11 +77,11 @@ ESPECIFICACIONES ZONA IZQUIERDA:
 Estilos:
 - Avatar: 24x24px, border-radius 4px
 - Nombre: 12px bold, #FFFFFF
-- Puntos: 10px, #FFAA00
+- Puntos: 10px, #FFD700
 - Font: monospace
 - Padding: 12px
-- Fondo: #16213E (sutil)
-- Border: 1px #33AA33
+- Fondo: #1E2547 (sutil)
+- Border: 1px #67E8F9
 
 ESPECIFICACIONES ZONA CENTRO:
 ┌────────────────┐
@@ -92,13 +92,13 @@ ESPECIFICACIONES ZONA CENTRO:
 
 Estilos:
 - Fuente: 14px bold, #FFFFFF
-- Color indicador: #FF4444 (rojo) o #4444FF (azul)
+- Color indicador: #FF4D6B (rojo cósmico) o #67E8F9 (cyan)
 - Parpadeo: 500ms on/off
 - Tamaño punto: 12x12px
 
 ALTURA TOTAL HEADER: 48px
 PADDING: 12px vertical, 16px horizontal
-BORDE INFERIOR: 1px #33AA33
+BORDE INFERIOR: 1px #67E8F9
 ```
 
 ---
@@ -119,7 +119,7 @@ BORDE INFERIOR: 1px #33AA33
 │         │                         │                │
 │         └─────────────────────────┘                │
 │                                                      │
-│ Borde tablero: 2px #2A1810                         │
+│ Borde tablero: 2px #67E8F9                         │
 │ Sombra: 4px offset #000000 (50% opacity)          │
 │ Posición: Centrada horizontalmente                  │
 │ Margin superior: 24px (desde header)               │
@@ -138,10 +138,10 @@ VISUALIZACIÓN EN TABLERO:
 ┌─────────┐
 │ X (0,0) │ ← Coordenada (fila, columna)
 ├─────────┤
-│ Casilla clara (#F5E6D3) o oscura (#2A1810)
-│ Ficha roja (♜) o azul (♛)
+│ Casilla clara (#1E2547) o oscura (#0B0D2B)
+│ Ficha roja (♜) o cyan (♛)
 │ Corona (*) si es reina
-│ Casilla posible (◆ naranja si mostrada)
+│ Casilla posible (◆ dorado si mostrada)
 └─────────┘
 ```
 
@@ -190,14 +190,14 @@ Ancho: 200px
 Posición: Izquierda tablero - 24px
 Altura: Variable, mín 300px
 Padding: 12px
-Borde: 1px #33AA33
-Fondo: #16213E
+Borde: 1px #67E8F9
+Fondo: #1E2547
 
 BOTONES CONTROL:
 Ancho: 100%
 Alto: 32px
 Separación: 8px
-Estilo: Verde (#33AA33) o Rojo (#CC3333)
+Estilo: Cyan (#67E8F9) o Rojo (#FF4D6B)
 ```
 
 ---
@@ -230,20 +230,20 @@ Posición: Derecha tablero + 24px
 Altura: 300px
 Overflow: Scroll vertical
 Padding: 8px
-Borde: 1px #33AA33
-Fondo: #16213E
+Borde: 1px #67E8F9
+Fondo: #1E2547
 
 CONTENIDO:
-Numeración: 8px, #999999
-Movimiento: 10px, #CCCCCC
+Numeración: 8px, #9CA3AF
+Movimiento: 10px, #B0E0FF
 Símbolo ficha: 10px, #FFFFFF
 Notación: FROM→TO (ej: R5→R4)
 
 EVENTOS MOVIMIENTO:
 - Movimiento realizado: Añade a lista
 - Scroll automático: Al final
-- Highlight último: #FFAA00
-- Highlight seleccionado: #33AA33
+- Highlight último: #FFD700
+- Highlight seleccionado: #67E8F9
 ```
 
 ---
@@ -266,9 +266,9 @@ LAYOUT:
 
 Estilos:
 - Fuente: 8px monospace
-- Color: #CCCCCC
-- Fondo: #0F3460
-- Borde superior: 1px #33AA33
+- Color: #B0E0FF
+- Fondo: #1E2547
+- Borde superior: 1px #67E8F9
 - Alto: 32px
 - Padding: 8px
 
@@ -277,8 +277,8 @@ CONTENIDO:
 - FPS: Mostrar si baja de 60
 - Estado:
   * "Tu turno" (verde)
-  * "Turno IA" (azul)
-  * "Esperando..." (naranja)
+   * "Turno IA" (cyan)
+   * "Esperando..." (dorado)
   * "¡Ganaste!" (verde brillante)
   * "¡Perdiste!" (rojo)
 ```
@@ -290,26 +290,26 @@ CONTENIDO:
 ### Turno del Jugador
 
 ```
-ESTADO: Tu turno (verde en status bar)
+ESTADO: Tu turno (cyan en status bar)
 
 1. Jugador selecciona ficha:
    ┌─────────────────────────┐
    │ Casilla seleccionada:   │
-   │ - Borde naranja 2px     │
+   │ - Borde dorado 2px      │
    │ - Fondo: Más claro      │
    │ - Mostrar movimientos   │
-   │   válidos (◆ naranja)   │
+   │   válidos (◆ dorado)    │
    └─────────────────────────┘
 
 2. Movimientos válidos:
    - Diagonales adelante 1 casilla
-   - Si es reina: Múltiples casillas
+   - Si es reina: Múltiples casillas en diagonal
    - Si hay captura: Obligatoria
    - Mostrar con símbolo ◆
 
 3. Jugador arrastra (drag) o click:
    - Confirma movimiento
-   - Actualiza tablero animado (200ms)
+   - Actualiza tablero animado con delay visible (150ms)
    - Deselecciona
    - Pasa turno a IA
 
@@ -322,7 +322,7 @@ ESTADO: Tu turno (verde en status bar)
 ### Turno de la IA
 
 ```
-ESTADO: "Turno IA" (azul en status bar)
+ESTADO: "Turno IA" (cyan en status bar)
 
 1. IA pensando:
    ┌──────────────────────┐
@@ -335,14 +335,15 @@ ESTADO: "Turno IA" (azul en status bar)
 
 2. IA decide movimiento:
    - Barra progreso: 100%
-   - Demora 200ms
+   - Demora visible antes de pintar el movimiento (320ms)
    - Tablero se actualiza
-   - Movimiento animado
+   - Movimiento animado con desplazamiento visible
 
 3. Animación movimiento:
    ┌─────────────────────┐
    │ Ficha IA se mueve:  │
-   │ - Duración: 200ms   │
+   │ - Duración: 320ms   │
+   │ - Delay: 320ms      │
    │ - Easing: Linear    │
    │ - Landing: -2px     │
    └─────────────────────┘
@@ -454,24 +455,24 @@ Paneles: Fixed ancho
 
 ### Casilla Clara (Activa)
 ```
-Fondo: #F5E6D3
-Borde: 1px #CCAA88
+Fondo: #1E2547
+Borde: 1px #67E8F9
 Sombra: Interna sutil
 
 Hover: Fondo +10% brillo
-Seleccionada: Borde 2px #FFAA00
-Con movimiento válido: Símbolo ◆ naranja
+Seleccionada: Borde 2px #FFD700
+Con movimiento válido: Símbolo ◆ dorado
 ```
 
 ### Casilla Oscura (Activa)
 ```
-Fondo: #2A1810
-Borde: 1px #1A0F08
+Fondo: #0B0D2B
+Borde: 1px #1E2547
 Sombra: Interna sutil
 
 Hover: Fondo +5% brillo
-Seleccionada: Borde 2px #FFAA00
-Con movimiento válido: Símbolo ◆ naranja
+Seleccionada: Borde 2px #FFD700
+Con movimiento válido: Símbolo ◆ dorado
 ```
 
 ---

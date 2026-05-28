@@ -3,58 +3,26 @@
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { useWebSocket } from '@/hooks/useWebSocket'
+import { calculateValidMoves } from '@/utils/checkersMoves'
 
 const API_BASE = 'http://localhost:3001'
 
-function calculateValidMoves(
-  board: number[][],
-  selectedPiece: [number, number] | null,
-): [number, number][] {
-  if (!selectedPiece) return []
+type MoveAnimation = {
+  from: [number, number]
+  to: [number, number]
+  piece: number
+  actor: 'player' | 'ai'
+  delayMs: number
+  durationMs: number
+}
 
-  const [row, col] = selectedPiece
-  const piece = board[row]?.[col]
-  if (!piece || piece === 0) return []
+const PLAYER_MOVE_DELAY_MS = 150
+const AI_MOVE_DELAY_MS = 320
 
-  const isPlayer = piece === 1 || piece === 3
-  const isKing = piece === 3 || piece === 4
-
-  if (!isPlayer) return []
-
-  const directions: [number, number][] = isKing
-    ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-    : [[-1, -1], [-1, 1]]
-
-  const moves: [number, number][] = []
-
-  for (const [dr, dc] of directions) {
-    const nr = row + dr
-    const nc = col + dc
-
-    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc] === 0) {
-      moves.push([nr, nc])
-    }
-
-    const cr = row + 2 * dr
-    const cc = col + 2 * dc
-    const midPiece = board[nr]?.[nc]
-
-    if (
-      cr >= 0 &&
-      cr < 8 &&
-      cc >= 0 &&
-      cc < 8 &&
-      midPiece !== 0 &&
-      midPiece !== undefined &&
-      midPiece !== piece &&
-      (midPiece === 2 || midPiece === 4) &&
-      board[cr][cc] === 0
-    ) {
-      moves.push([cr, cc])
-    }
+const clearTimer = (timer: ReturnType<typeof setTimeout> | null): void => {
+  if (timer) {
+    clearTimeout(timer)
   }
-
-  return moves
 }
 
 export function useGame(difficulty: string) {
@@ -69,20 +37,25 @@ export function useGame(difficulty: string) {
   const [error, setErrorLocal] = useState(initialState.error)
   const [currentPlayer, setCurrentPlayerLocal] = useState(initialState.currentPlayer)
   const [forcedPiece, setForcedPiece] = useState<[number, number] | null>(null)
+  const [moveAnimation, setMoveAnimation] = useState<MoveAnimation | null>(null)
+  const [moveHistory, setMoveHistory] = useState<
+    Array<{ player: 'player' | 'ai'; from: [number, number]; to: [number, number] }>
+  >([])
 
-  useEffect(() => {
-    const unsubscribe = useGameStore.subscribe((state) => {
-      setGameIdLocal(state.gameId)
-      setBoardLocal(state.board)
-      setStatusLocal(state.status)
-      setResultLocal(state.result)
-      setIsLoading(state.isLoading)
-      setErrorLocal(state.error)
-      setCurrentPlayerLocal(state.currentPlayer)
-    })
+  const playerBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const aiBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const animationClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-    return unsubscribe
+  const clearTimers = useCallback(() => {
+    clearTimer(playerBoardTimerRef.current)
+    clearTimer(aiBoardTimerRef.current)
+    clearTimer(animationClearTimerRef.current)
+    playerBoardTimerRef.current = null
+    aiBoardTimerRef.current = null
+    animationClearTimerRef.current = null
   }, [])
+
+  useEffect(() => () => clearTimers(), [clearTimers])
 
   const setLoading = useCallback((loading: boolean) => {
     useGameStore.getState().setLoading(loading)
@@ -118,6 +91,60 @@ export function useGame(difficulty: string) {
 
   const setResult = useCallback((value: string | null) => {
     useGameStore.getState().setResult(value)
+  }, [])
+
+  const scheduleBoardUpdate = useCallback(
+    (
+      nextBoard: number[][],
+      animation: MoveAnimation,
+      nextPlayerValue: number,
+      nextForcedPiece: [number, number] | null,
+      isGameOver: boolean,
+    ) => {
+      clearTimer(animationClearTimerRef.current)
+      setMoveAnimation(animation)
+
+      const boardTimerRef = animation.actor === 'player' ? playerBoardTimerRef : aiBoardTimerRef
+      const boardDelay = animation.actor === 'player' ? PLAYER_MOVE_DELAY_MS : AI_MOVE_DELAY_MS
+
+      clearTimer(boardTimerRef.current)
+      boardTimerRef.current = setTimeout(() => {
+        setBoard(nextBoard)
+        setCurrentPlayer(nextPlayerValue)
+
+        if (nextForcedPiece) {
+          setForcedPiece(nextForcedPiece)
+          setSelectedPiece(nextForcedPiece)
+        } else {
+          setForcedPiece(null)
+          setSelectedPiece(null)
+        }
+
+        if (isGameOver) {
+          setMoveAnimation(null)
+          return
+        }
+
+        animationClearTimerRef.current = setTimeout(() => {
+          setMoveAnimation(null)
+        }, animation.durationMs)
+      }, boardDelay)
+    },
+    [setBoard, setCurrentPlayer, setSelectedPiece],
+  )
+
+  useEffect(() => {
+    const unsubscribe = useGameStore.subscribe((state) => {
+      setGameIdLocal(state.gameId)
+      setBoardLocal(state.board)
+      setStatusLocal(state.status)
+      setResultLocal(state.result)
+      setIsLoading(state.isLoading)
+      setErrorLocal(state.error)
+      setCurrentPlayerLocal(state.currentPlayer)
+    })
+
+    return unsubscribe
   }, [])
 
   const gameStartedRef = useRef(false)
@@ -177,31 +204,77 @@ export function useGame(difficulty: string) {
 
       switch (data.type) {
         case 'game_state':
+          clearTimers()
+          setMoveAnimation(null)
+          setMoveHistory([])
           setBoard(data.board as number[][])
           setCurrentPlayer(data.currentPlayer as number)
           setStatus((data.status === 'gameOver' ? 'gameOver' : 'playing'))
           break
         case 'move_applied':
-          setBoard(data.board as number[][])
-          if (typeof data.nextPlayer === 'number') {
-            setCurrentPlayer(data.nextPlayer as number)
-          }
+          if (Array.isArray(data.lastMove?.from) && Array.isArray(data.lastMove?.to)) {
+            const from = data.lastMove.from as [number, number]
+            const to = data.lastMove.to as [number, number]
+            const sourceBoard = useGameStore.getState().board
+            const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
-          if (Array.isArray(data.forcedPiece)) {
-            setForcedPiece(data.forcedPiece as [number, number])
-            setSelectedPiece(data.forcedPiece as [number, number])
+            setMoveHistory((previous) => [
+              ...previous,
+              { player: 'player', from, to },
+            ])
+
+            scheduleBoardUpdate(
+              data.board as number[][],
+              {
+                from,
+                to,
+                piece,
+                actor: 'player',
+                delayMs: PLAYER_MOVE_DELAY_MS,
+                durationMs: 240,
+              },
+              typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
+              Array.isArray(data.forcedPiece) ? (data.forcedPiece as [number, number]) : null,
+              false,
+            )
+          }
+          break
+        case 'ai_move':
+          if (Array.isArray(data.lastMove?.from) && Array.isArray(data.lastMove?.to)) {
+            const from = data.lastMove.from as [number, number]
+            const to = data.lastMove.to as [number, number]
+            const sourceBoard = useGameStore.getState().board
+            const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
+
+            setMoveHistory((previous) => [
+              ...previous,
+              { player: 'ai', from, to },
+            ])
+
+            scheduleBoardUpdate(
+              data.board as number[][],
+              {
+                from,
+                to,
+                piece,
+                actor: 'ai',
+                delayMs: AI_MOVE_DELAY_MS,
+                durationMs: 320,
+              },
+              typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
+              null,
+              false,
+            )
           } else {
+            setBoard(data.board as number[][])
+            setCurrentPlayer((data.nextPlayer as number) || 1)
             setForcedPiece(null)
             setSelectedPiece(null)
           }
           break
-        case 'ai_move':
-          setBoard(data.board as number[][])
-          setCurrentPlayer((data.nextPlayer as number) || 1)
-          setForcedPiece(null)
-          setSelectedPiece(null)
-          break
         case 'game_over':
+          clearTimers()
+          setMoveAnimation(null)
           setBoard(data.board as number[][])
           setStatus('gameOver')
           setResult((data.result as string) || 'Game Over')
@@ -213,7 +286,7 @@ export function useGame(difficulty: string) {
           break
       }
     },
-    [setBoard, setCurrentPlayer, setError, setResult, setStatus],
+    [clearTimers, scheduleBoardUpdate, setBoard, setCurrentPlayer, setError, setResult, setStatus],
   )
 
   const ws = useWebSocket(wsUrl, {
@@ -227,7 +300,7 @@ export function useGame(difficulty: string) {
 
       if (state.status !== 'playing' || state.currentPlayer !== 1) return
 
-      if (forcedPiece && (forcedPiece[0] !== row || forcedPiece[1] !== col)) {
+      if (forcedPiece && selectedPiece === null && (forcedPiece[0] !== row || forcedPiece[1] !== col)) {
         return
       }
 
@@ -288,5 +361,7 @@ export function useGame(difficulty: string) {
     isConnected: ws.isConnected,
     currentPlayer,
     handleSquareClick,
+    moveAnimation,
+    moveHistory,
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useGame } from '@/hooks/useGame'
 import { useGameStore } from '@/stores/gameStore'
@@ -35,6 +35,8 @@ export default function GameContainer({ difficulty }: Props) {
     isConnected,
     currentPlayer,
     handleSquareClick,
+    moveAnimation,
+    moveHistory,
   } = useGame(difficulty)
 
   // Cleanup on unmount
@@ -61,6 +63,37 @@ export default function GameContainer({ difficulty }: Props) {
     const ai = flat.filter((p) => p === 2 || p === 4).length
     return { player, ai }
   }, [board])
+
+  const turnLabel =
+    status === 'gameOver'
+      ? result || 'JUEGO TERMINADO'
+      : currentPlayer === 1
+        ? 'TU TURNO'
+        : 'TURNO DE IA'
+
+  const recentMoves = [...moveHistory].slice(-8).reverse()
+
+  const [elapsed, setElapsed] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (status === 'gameOver') {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+    timerRef.current = setInterval(() => {
+      setElapsed((prev) => prev + 1)
+    }, 1000)
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [status])
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
 
   if (isLoading) {
     return (
@@ -149,53 +182,73 @@ export default function GameContainer({ difficulty }: Props) {
       />
 
       {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3">
-        <button
-          onClick={handleBack}
+      <div className="relative z-10 px-4 pt-4">
+        <div
+          className="grid gap-3 md:grid-cols-[1fr_auto_1fr] items-stretch"
           style={{
-            backgroundColor: COLORS.spacePanel,
-            border: `2px solid ${COLORS.magenta}`,
-            color: COLORS.cyan,
-            padding: '6px 14px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            cursor: 'pointer',
-            boxShadow: `0 0 4px ${COLORS.magenta}`,
+            alignItems: 'stretch',
           }}
         >
-          ← SALIR
-        </button>
+          <div
+            style={{
+              backgroundColor: 'rgba(30, 37, 71, 0.8)',
+              border: `1px solid ${COLORS.cyan}`,
+              boxShadow: `0 0 12px rgba(103, 232, 249, 0.18)`,
+              padding: '12px 14px',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.cyan, fontSize: '16px' }}>
+              YOU
+            </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textWhite, fontSize: '20px' }}>
+              Red Cosmic
+            </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px' }}>
+              Fichas: {pieceCounts.player}
+            </p>
+          </div>
 
-        <div className="text-center">
-          <p
+          <div
             style={{
-              fontFamily: 'VT323, monospace',
-              color: COLORS.gold,
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
+              backgroundColor: 'rgba(11, 13, 43, 0.88)',
+              border: `1px solid ${COLORS.gold}`,
+              boxShadow: `0 0 16px rgba(255, 215, 0, 0.15)`,
+              padding: '12px 18px',
+              textAlign: 'center',
+              backdropFilter: 'blur(8px)',
             }}
           >
-            {difficulty}
-          </p>
-          <p
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.gold, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+              {difficulty}
+            </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.cyan, fontSize: '22px' }}>
+              {turnLabel}
+            </p>
+          </div>
+
+          <div
             style={{
-              fontFamily: 'VT323, monospace',
-              color: COLORS.cyan,
-              fontSize: '18px',
+              backgroundColor: 'rgba(30, 37, 71, 0.8)',
+              border: `1px solid ${COLORS.magenta}`,
+              boxShadow: `0 0 12px rgba(192, 38, 211, 0.18)`,
+              padding: '12px 14px',
+              textAlign: 'right',
+              backdropFilter: 'blur(8px)',
             }}
           >
-            {status === 'gameOver'
-              ? result || 'JUEGO TERMINADO'
-              : currentPlayer === 1
-                ? 'TU TURNO'
-                : 'TURNO DE IA...'}
-          </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.magenta, fontSize: '16px' }}>
+              IA
+            </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textWhite, fontSize: '20px' }}>
+              {difficulty}
+            </p>
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px' }}>
+              Fichas: {pieceCounts.ai}
+            </p>
+
+          </div>
         </div>
-
-        <div style={{ width: '70px' }} />
       </div>
 
       {/* Connection indicator */}
@@ -213,26 +266,133 @@ export default function GameContainer({ difficulty }: Props) {
         </div>
       )}
 
-      {/* Board */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-4">
-        {board && board.length > 0 ? (
-          <GameBoard
-            board={board}
-            selectedPiece={selectedPiece}
-            onSquareClick={handleSquareClick}
-            validMoves={[]}
-          />
-        ) : (
-          <p
+      {/* Board and side panels */}
+      <main className="relative z-10 flex-1 px-4 py-4">
+        <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_220px] items-start h-full">
+          <aside
             style={{
-              fontFamily: 'VT323, monospace',
-              color: COLORS.textSpace,
-              fontSize: '20px',
+              backgroundColor: 'rgba(30, 37, 71, 0.76)',
+              border: `1px solid ${COLORS.cyan}`,
+              boxShadow: `0 0 12px rgba(103, 232, 249, 0.12)`,
+              padding: '14px',
+              backdropFilter: 'blur(8px)',
+              animation: 'float 5s ease-in-out infinite',
             }}
           >
-            Esperando tablero...
-          </p>
-        )}
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.gold, fontSize: '16px', marginBottom: '10px' }}>
+              CONTROL
+            </p>
+            <div style={{ display: 'grid', gap: '8px', color: COLORS.textSpace, fontFamily: 'VT323, monospace', fontSize: '15px' }}>
+              <p>IA: {difficulty}</p>
+              <p>Tiempo: {formatTime(elapsed)}</p>
+              <p>Capturas: visibles</p>
+              <p>Jugador: {pieceCounts.player}</p>
+              <p>IA: {pieceCounts.ai}</p>
+            </div>
+            <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
+              <button
+                onClick={handleBack}
+                style={{
+                  backgroundColor: COLORS.magenta,
+                  border: `1px solid ${COLORS.cyan}`,
+                  color: COLORS.textWhite,
+                  padding: '8px 10px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                }}
+              >
+                Menú
+              </button>
+              <button
+                onClick={handlePlayAgain}
+                style={{
+                  backgroundColor: COLORS.spacePanel,
+                  border: `1px solid ${COLORS.gold}`,
+                  color: COLORS.gold,
+                  padding: '8px 10px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                }}
+              >
+                Reiniciar
+              </button>
+            </div>
+          </aside>
+
+          <section className="flex items-center justify-center">
+            {board && board.length > 0 ? (
+              <GameBoard
+                board={board}
+                selectedPiece={selectedPiece}
+                onSquareClick={handleSquareClick}
+                validMoves={[]}
+                moveAnimation={moveAnimation}
+              />
+            ) : (
+              <p
+                style={{
+                  fontFamily: 'VT323, monospace',
+                  color: COLORS.textSpace,
+                  fontSize: '20px',
+                }}
+              >
+                Esperando tablero...
+              </p>
+            )}
+          </section>
+
+          <aside
+            style={{
+              backgroundColor: 'rgba(30, 37, 71, 0.76)',
+              border: `1px solid ${COLORS.cyan}`,
+              boxShadow: `0 0 12px rgba(103, 232, 249, 0.12)`,
+              padding: '14px',
+              backdropFilter: 'blur(8px)',
+              animation: 'float 5s ease-in-out infinite',
+              animationDelay: '0.2s',
+            }}
+          >
+            <p style={{ fontFamily: 'VT323, monospace', color: COLORS.gold, fontSize: '16px', marginBottom: '10px' }}>
+              HISTORIAL
+            </p>
+            <div style={{ display: 'grid', gap: '8px', maxHeight: '460px', overflowY: 'auto' }}>
+              {recentMoves.length === 0 ? (
+                <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px' }}>
+                  Sin movimientos aún.
+                </p>
+              ) : (
+                recentMoves.map((entry, index) => (
+                  <div
+                    key={`${entry.player}-${index}-${entry.from.join('-')}-${entry.to.join('-')}`}
+                    style={{
+                      backgroundColor: 'rgba(11, 13, 43, 0.6)',
+                      border: `1px solid ${entry.player === 'player' ? COLORS.cyan : COLORS.magenta}`,
+                      padding: '8px 10px',
+                      color: COLORS.textWhite,
+                      fontFamily: 'VT323, monospace',
+                      fontSize: '15px',
+                      animation: 'float 3.6s ease-in-out infinite',
+                      animationDelay: `${index * 0.12}s`,
+                    }}
+                  >
+                    <p style={{ color: entry.player === 'player' ? COLORS.cyan : COLORS.gold }}>
+                      {entry.player === 'player' ? 'JUGADOR' : 'IA'}
+                    </p>
+                    <p>
+                      {entry.from[0]},{entry.from[1]} → {entry.to[0]},{entry.to[1]}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </aside>
+        </div>
       </main>
 
       {/* Bottom bar — piece count */}
@@ -244,7 +404,7 @@ export default function GameContainer({ difficulty }: Props) {
             fontSize: '16px',
           }}
         >
-          Tú: {pieceCounts.player} | IA: {pieceCounts.ai}
+          Tú: {pieceCounts.player} | IA: {pieceCounts.ai} | {turnLabel}
         </p>
       </div>
 

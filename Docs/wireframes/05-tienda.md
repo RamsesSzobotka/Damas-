@@ -76,11 +76,11 @@ ESTRUCTURA CARD:
 └────────────────┘
 
 COLORES RAREZA:
-- COMMON: #999999 (Gris)
-- UNCOMMON: #33AA33 (Verde)
-- RARE: #4444FF (Azul)
-- EPIC: #FFAA00 (Naranja/Oro)
-- LEGENDARY: #FF4444 (Rojo)
+- COMMON: #B0E0FF (Azul claro)
+- UNCOMMON: #67E8F9 (Cyan)
+- RARE: #C026D3 (Magenta)
+- EPIC: #FFD700 (Dorado)
+- LEGENDARY: #F0F8FF (Blanco estelar)
 ```
 
 ---

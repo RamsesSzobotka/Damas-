@@ -83,8 +83,8 @@
 │  ◄ ATRÁS  (16px, texto interactivo)│
 │  (alineado izquierda, padding 16px)│
 │                                    │
-│  Color: #CCCCCC                    │
-│  Hover: #FFAA00 (naranja)          │
+│  Color: #B0E0FF                    │
+│  Hover: #67E8F9 (cyan)             │
 │  Cursor: pointer                   │
 │  Font: 10px, monospace bold        │
 └────────────────────────────────────┘
@@ -105,7 +105,7 @@
 └────────────────────────────────────┘
 
 Font: 20px bold, #FFFFFF
-Subtitle: 10px, #CCCCCC
+Subtitle: 10px, #B0E0FF
 Padding: 24px vertical
 ```
 
@@ -175,19 +175,19 @@ Padding: 24px vertical
 
 ESTILOS TARJETA:
 Normal:
-  - Fondo: #16213E (azul oscuro)
-  - Borde: 2px #33AA33 (verde)
+  - Fondo: #1E2547 (visor espacial)
+  - Borde: 2px #67E8F9 (cyan)
   - Padding: 12px
   
 Hover:
-  - Fondo: #0F3460 (+brillo)
-  - Borde: 2px #FFAA00 (naranja)
+  - Fondo: #0E1233 (+brillo)
+  - Borde: 2px #FFD700 (dorado)
   - Transform: scale(1.02)
   - Cursor: pointer
   
 Seleccionada:
-  - Borde: 3px #FFAA00 (naranja brillante)
-  - Box-shadow: 0 0 8px #FFAA00 (resplandor)
+  - Borde: 3px #FFD700 (dorado brillante)
+  - Box-shadow: 0 0 8px #67E8F9 (resplandor)
 
 CONTENIDO TARJETA:
 ┌─────────────────────┐
@@ -215,38 +215,38 @@ CONTENIDO TARJETA:
 
 ### Principiante 🟢
 ```
-Color primario: #33AA33 (Verde)
-Color secundario: #22DD22 (Verde claro)
+Color primario: #67E8F9 (Cyan)
+Color secundario: #B0E0FF (Azul claro)
 Icono: 🟢
-Borde: #33AA33
-Hover border: #44BB44
+Borde: #67E8F9
+Hover border: #B0E0FF
 ```
 
 ### Intermedio 🟡
 ```
-Color primario: #FFAA00 (Naranja/Amarillo)
-Color secundario: #FFCC44 (Amarillo claro)
+Color primario: #FFD700 (Dorado)
+Color secundario: #FFF1A8 (Dorado claro)
 Icono: 🟡
-Borde: #FFAA00
-Hover border: #FFBB11
+Borde: #FFD700
+Hover border: #67E8F9
 ```
 
 ### Master 🔴
 ```
-Color primario: #FF4444 (Rojo)
-Color secundario: #FF6666 (Rojo claro)
+Color primario: #C026D3 (Magenta)
+Color secundario: #E879F9 (Magenta claro)
 Icono: 🔴
-Borde: #FF4444
-Hover border: #FF7777
+Borde: #C026D3
+Hover border: #FF4D6B
 ```
 
 ### Ultra ⚫
 ```
-Color primario: #666666 (Gris oscuro)
-Color secundario: #888888 (Gris medio)
+Color primario: #F0F8FF (Blanco estelar)
+Color secundario: #B0E0FF (Azul claro)
 Icono: ⚫
-Borde: #666666
-Hover border: #999999
+Borde: #F0F8FF
+Hover border: #67E8F9
 ```
 
 ---
@@ -260,9 +260,9 @@ Hover border: #999999
 │  [JUGAR]             │
 │  200px × 40px        │
 │  Font: 14px bold     │
-│  Color: #33AA33      │
-│  Hover: #44BB44      │
-│  Pressed: #228822    │
+│  Color: #FFD700      │
+│  Hover: #67E8F9      │
+│  Pressed: #C026D3    │
 └──────────────────────┘
 
 Ubicación: Centro inferior
@@ -281,9 +281,9 @@ Acciones:
 │  [ATRÁS]             │
 │  200px × 40px        │
 │  Font: 14px bold     │
-│  Color: #CC3333      │
-│  Hover: #FF4444      │
-│  Pressed: #AA2222    │
+│  Color: #FF4D6B      │
+│  Hover: #E879F9      │
+│  Pressed: #B91C3C    │
 └──────────────────────┘
 
 Ubicación: Centro inferior, debajo de "JUGAR"
@@ -435,14 +435,14 @@ Estado 1: Ninguna seleccionada
 
 Click tarjeta:
 - Animación: scale 1.00 → 1.02 (100ms)
-- Borde: #33AA33 → #FFAA00
-- Glow: Aparece sombra naranja
+- Borde: #67E8F9 → #FFD700
+- Glow: Aparece sombra dorada
 - Otras tarjetas: mantienen estado normal
 
 Estado 2: Seleccionada
-- Borde: 3px #FFAA00
-- Glow: 0 0 8px #FFAA00
-- Botón "JUGAR": Activo (verde)
+- Borde: 3px #FFD700
+- Glow: 0 0 8px #67E8F9
+- Botón "JUGAR": Activo (dorado)
 - Hover otros botones: Deshabilitados
 ```
 
