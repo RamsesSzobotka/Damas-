@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useUser, useAuth, SignInButton } from '@clerk/tanstack-react-start'
-import bgImage from '@/assets/background/back1.png'
+import Stars from '@/components/ui/Stars'
+import bgImage from '@/assets/background/backStore.png'
 
 const COLORS = {
   spaceDark: '#0B0D2B',
@@ -377,6 +378,7 @@ export default function ShopContainer() {
           `,
         }}
       />
+      <Stars />
 
       <main className="flex-1 flex flex-col items-center px-4 py-8 relative z-10">
         <div

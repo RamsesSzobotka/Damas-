@@ -106,9 +106,33 @@ function createInitialBoard(): number[][] {
 }
 
 /**
+ * Encuentra la ficha capturada (si existe) en un movimiento de `from` a `to`.
+ * Camina casilla por casilla en la diagonal y devuelve la primera ficha
+ * que no sea vacía. Funciona para fichas normales (2 pasos) y reyes (N pasos).
+ */
+function findCapturedPiece(
+  board: number[][],
+  from: [number, number],
+  to: [number, number]
+): [number, number] | null {
+  const dr = to[0] > from[0] ? 1 : -1
+  const dc = to[1] > from[1] ? 1 : -1
+  const steps = Math.abs(to[0] - from[0])
+
+  for (let s = 1; s < steps; s++) {
+    const row = from[0] + s * dr
+    const col = from[1] + s * dc
+    if (board[row][col] !== 0) {
+      return [row, col]
+    }
+  }
+  return null
+}
+
+/**
  * Aplica un movimiento al tablero (optimistamente, sin validación de reglas).
  * - Mueve la ficha desde `from` a `to`
- * - Detecta capturas (movimiento diagonal de 2 casillas)
+ * - Elimina las fichas capturadas (si se proporcionan explícitamente)
  * - Detecta promociones a rey
  */
 function applyMoveToBoard(
@@ -127,13 +151,16 @@ function applyMoveToBoard(
       newBoard[capturedRow][capturedCol] = 0
     }
   } else {
-    // Detectar captura (punto medio entre from y to)
-    const midRow = (from[0] + to[0]) / 2
-    const midCol = (from[1] + to[1]) / 2
-    if (Number.isInteger(midRow) && Number.isInteger(midCol)) {
-      const capturedPiece = newBoard[midRow][midCol]
-      if (capturedPiece !== 0) {
-        newBoard[midRow][midCol] = 0
+    // Fallback: caminar la diagonal from→to y eliminar la primera ficha que no sea vacía
+    const dr = to[0] > from[0] ? 1 : -1
+    const dc = to[1] > from[1] ? 1 : -1
+    const steps = Math.abs(to[0] - from[0])
+    for (let s = 1; s < steps; s++) {
+      const row = from[0] + s * dr
+      const col = from[1] + s * dc
+      if (newBoard[row][col] !== 0) {
+        newBoard[row][col] = 0
+        break
       }
     }
   }
@@ -238,9 +265,15 @@ export async function handlePlayerMove(
 
   // Aplicar movimiento del jugador
   const movedPiece = game.board[from[0]][from[1]]
-  let currentBoard = applyMoveToBoard(game.board as number[][], from, to)
+  const captured = findCapturedPiece(game.board as number[][], from, to)
+  const isCapture = captured !== null
+  let currentBoard = applyMoveToBoard(
+    game.board as number[][],
+    from,
+    to,
+    captured ? [captured] : []
+  )
   const pieceAfterMove = currentBoard[to[0]][to[1]]
-  const isCapture = Math.abs(from[0] - to[0]) === 2
 
   const canContinueCapture = (board: number[][], row: number, col: number): boolean => {
     const piece = board[row][col]

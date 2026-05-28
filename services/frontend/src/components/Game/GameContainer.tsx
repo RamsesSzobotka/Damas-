@@ -6,7 +6,8 @@ import { useUser, useAuth } from '@clerk/tanstack-react-start'
 import { useGame } from '@/hooks/useGame'
 import { useGameStore } from '@/stores/gameStore'
 import GameBoard from '@/components/Game/GameBoard'
-import bgImage from '@/assets/background/back1.png'
+import Stars from '@/components/ui/Stars'
+import bgImage from '@/assets/background/backPlay.png'
 
 const COLORS = {
   spaceDark: '#0B0D2B',
@@ -209,6 +210,7 @@ export default function GameContainer({ difficulty }: Props) {
           `,
         }}
       />
+      <Stars />
 
       {/* Top bar */}
       <div className="relative z-10 px-4 pt-4">
