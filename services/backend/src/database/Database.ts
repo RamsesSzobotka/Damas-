@@ -106,7 +106,7 @@ export class Database {
    */
   private async createIndexes(
     collectionName: string,
-    indexes: Array<{ key: Record<string, number>; unique?: boolean }>
+    indexes: Array<{ key: Record<string, number | undefined>; unique?: boolean }>
   ): Promise<void> {
     try {
       const collection = this.db!.collection(collectionName)
@@ -119,7 +119,7 @@ export class Database {
       for (const indexSpec of indexes) {
         const keyStr = JSON.stringify(indexSpec.key)
         if (!existingKeys.includes(keyStr)) {
-          await collection.createIndex(indexSpec.key, {
+          await collection.createIndex(indexSpec.key as any, {
             unique: indexSpec.unique || false,
           })
           created++

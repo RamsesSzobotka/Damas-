@@ -90,7 +90,6 @@ COLORES RAREZA:
 - [ ] Grid de skins responsive
 - [ ] Filtros por tipo y rareza
 - [ ] Ordenamiento dinámico
-- [ ] Carrito de compras
 - [ ] Integración Stripe
 - [ ] Paginación
 - [ ] Vista detallada de skin

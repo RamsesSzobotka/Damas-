@@ -2,8 +2,11 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { initializeDatabase } from './database/Database'
+import { seedShopSkins } from './database/seed'
 import { gameRoutes, addGameConnection, removeGameConnection, broadcastToGame } from '@/routes/game'
 import { authRoute } from '@/routes/auth'
+import { shopRoute } from '@/routes/shop'
+import { paymentRoute } from '@/routes/payment'
 import { getGame, handlePlayerMove } from '@/services/gameService'
 
 const app = new Hono()
@@ -27,6 +30,8 @@ app.get('/health', (c) => {
 // Registrar rutas (REST)
 app.route('/', gameRoutes)
 app.route('/', authRoute)
+app.route('/', shopRoute)
+app.route('/', paymentRoute)
 
 // Inicializar base de datos y arrancar servidor
 const PORT = parseInt(process.env.PORT || '3001')
@@ -39,6 +44,8 @@ async function start() {
     const db = initializeDatabase(MONGODB_URI)
     await db.connect(MONGODB_NAME)
     await db.initializeCollections()
+
+    await seedShopSkins()
 
     console.log(`🚀 Backend corriendo en http://localhost:${PORT}`)
   } catch (error) {
