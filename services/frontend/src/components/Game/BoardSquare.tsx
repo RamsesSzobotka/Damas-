@@ -25,12 +25,12 @@ export default function BoardSquare({
     <div
       onClick={onClick}
       style={{
-        backgroundColor: isDark ? '#2A1B5E' : '#1E2547',
+        backgroundColor: isDark ? '#1A1040' : '#4C3F91',
         border: isSelected
-          ? '2px solid #67E8F9'
-          : '1px solid transparent',
+          ? '2px solid #FFD700'
+          : '1px solid rgba(255, 255, 255, 0.08)',
         boxShadow: isSelected
-          ? '0 0 8px #67E8F9, inset 0 0 8px rgba(103, 232, 249, 0.2)'
+          ? '0 0 12px #FFD700, inset 0 0 12px rgba(255, 215, 0, 0.25)'
           : 'none',
         cursor: piece !== 0 || isValidMove ? 'pointer' : 'default',
         display: 'flex',
@@ -38,7 +38,8 @@ export default function BoardSquare({
         justifyContent: 'center',
         position: 'relative',
         aspectRatio: '1',
-        transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
+        transition: 'background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+        outline: 'none',
       }}
     >
       {piece !== 0 && <Piece piece={piece} />}
@@ -46,12 +47,13 @@ export default function BoardSquare({
       {isValidMove && piece === 0 && (
         <div
           style={{
-            width: '30%',
-            height: '30%',
+            width: '36%',
+            height: '36%',
             borderRadius: '50%',
             backgroundColor: '#67E8F9',
-            opacity: 0.5,
+            opacity: 0.65,
             position: 'absolute',
+            boxShadow: '0 0 8px rgba(103, 232, 249, 0.5)',
           }}
         />
       )}

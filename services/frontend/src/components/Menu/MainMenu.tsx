@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useUser, useAuth, SignInButton, UserButton } from '@clerk/tanstack-react-start'
 import bgImage from '@/assets/background/back1.png'
 
 const COLORS = {
@@ -256,34 +257,103 @@ function CosmicLogo() {
   )
 }
 
-function AuthButton() {
-  const [isHovered, setIsHovered] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
+function AuthSection() {
+  const { user, isSignedIn, isLoaded } = useUser()
+  const { getToken } = useAuth()
+  const syncedRef = useRef(false)
+
+  const syncUser = useCallback(async () => {
+    if (!isSignedIn || !user || syncedRef.current) return
+    syncedRef.current = true
+
+    try {
+      const token = await getToken()
+      await fetch(`${API_BASE}/api/auth/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          clerkId: user.id,
+          email: user.primaryEmailAddress?.emailAddress || '',
+          username: user.username || user.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'player',
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          avatar: user.imageUrl || undefined,
+        }),
+      })
+    } catch (err) {
+      console.error('Error syncing user with backend:', err)
+    }
+  }, [isSignedIn, user, getToken])
+
+  useEffect(() => {
+    if (isSignedIn && user && !syncedRef.current) {
+      syncUser()
+    }
+  }, [isSignedIn, user, syncUser])
+
+  if (!isLoaded) {
+    return (
+      <div style={{ width: '120px', height: '36px' }} />
+    )
+  }
+
+  if (!isSignedIn) {
+    return (
+      <SignInButton mode="modal">
+        <button
+          className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-200"
+          style={{
+            backgroundColor: COLORS.spacePanel,
+            border: `2px solid ${COLORS.cyan}`,
+            color: COLORS.cyan,
+            boxShadow: `0 0 4px ${COLORS.cyan}`,
+            cursor: 'pointer',
+            ...pixelFont,
+          }}
+        >
+          INICIAR SESIÓN
+        </button>
+      </SignInButton>
+    )
+  }
 
   return (
-    <button
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false)
-        setIsPressed(false)
-      }}
-      className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-200"
-      style={{
-        backgroundColor: isPressed ? '#2A1B5E' : isHovered ? COLORS.magenta : COLORS.spacePanel,
-        border: `2px solid ${isHovered ? COLORS.cyan : COLORS.magenta}`,
-        color: isHovered ? COLORS.textWhite : COLORS.cyan,
-        boxShadow: isHovered ? `0 0 10px ${COLORS.cyan}` : `0 0 4px ${COLORS.magenta}`,
-        textShadow: isHovered ? `0 0 6px ${COLORS.cyan}` : 'none',
-        cursor: 'pointer',
-        transform: isPressed ? 'scale(0.95)' : 'scale(1)',
-        transition: 'transform 0.15s ease, background-color 0.2s ease',
-        ...pixelFont,
-      }}
-    >
-      👤 PERFIL
-    </button>
+    <div className="flex items-center gap-3" style={{ fontFamily: 'VT323, monospace' }}>
+      <span style={{ color: COLORS.textSpace, fontSize: '15px', textAlign: 'right' }}>
+        {user.username || user.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'Player'}
+      </span>
+      <UserButton
+        appearance={{
+          elements: {
+            userButtonAvatarBox: {
+              width: '32px',
+              height: '32px',
+              border: `2px solid ${COLORS.magenta}`,
+              boxShadow: `0 0 6px ${COLORS.magenta}`,
+            },
+            userButtonPopoverCard: {
+              backgroundColor: COLORS.spacePanel,
+              border: `1px solid ${COLORS.magenta}`,
+            },
+            userButtonPopoverActionButton: {
+              color: COLORS.textWhite,
+              fontFamily: 'VT323, monospace',
+            },
+            userPreviewMainIdentifier: {
+              fontFamily: 'VT323, monospace',
+            },
+            userPreviewSecondaryIdentifier: {
+              fontFamily: 'VT323, monospace',
+            },
+          },
+        }}
+      />
+    </div>
   )
 }
 
@@ -340,7 +410,7 @@ export default function MainMenu() {
           animationDelay: '0.4s',
         }}
       >
-        <AuthButton />
+        <AuthSection />
       </div>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">

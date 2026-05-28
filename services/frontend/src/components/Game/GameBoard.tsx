@@ -38,13 +38,6 @@ export default function GameBoard({
     [moves],
   )
 
-  const animationDelta = moveAnimation
-    ? {
-        dx: `${(moveAnimation.to[1] - moveAnimation.from[1]) * 100}%`,
-        dy: `${(moveAnimation.to[0] - moveAnimation.from[0]) * 100}%`,
-      }
-    : null
-
   return (
     <div
       style={{
@@ -59,67 +52,61 @@ export default function GameBoard({
       }}
     >
       {board.map((row, rowIdx) =>
-        row.map((piece, colIdx) => (
-          <BoardSquare
-            key={`${rowIdx}-${colIdx}`}
-            row={rowIdx}
-            col={colIdx}
-            piece={piece}
-            isSelected={
-              selectedPiece?.[0] === rowIdx && selectedPiece?.[1] === colIdx
-            }
-            isValidMove={validSet.has(`${rowIdx},${colIdx}`)}
-            onClick={() => onSquareClick(rowIdx, colIdx)}
-          />
-        )),
+        row.map((piece, colIdx) => {
+          // Hide the piece if it's being animated
+          const isAnimatingPiece =
+            moveAnimation &&
+            moveAnimation.from[0] === rowIdx &&
+            moveAnimation.from[1] === colIdx
+
+          return (
+            <BoardSquare
+              key={`${rowIdx}-${colIdx}`}
+              row={rowIdx}
+              col={colIdx}
+              piece={isAnimatingPiece ? 0 : piece}
+              isSelected={
+                selectedPiece?.[0] === rowIdx && selectedPiece?.[1] === colIdx
+              }
+              isValidMove={validSet.has(`${rowIdx},${colIdx}`)}
+              onClick={() => onSquareClick(rowIdx, colIdx)}
+            />
+          )
+        }),
       )}
 
-      {moveAnimation && animationDelta && (
-        <>
+      {/* Animation layer */}
+      {moveAnimation && (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${moveAnimation.from[1] * 12.5}%`,
+            top: `${moveAnimation.from[0] * 12.5}%`,
+            width: '12.5%',
+            height: '12.5%',
+            pointerEvents: 'none',
+            zIndex: 10,
+            animation: `piece-move ${moveAnimation.durationMs}ms ease-in-out forwards`,
+            ['--from-x' as never]: '0',
+            ['--from-y' as never]: '0',
+            ['--to-x' as never]: `${(moveAnimation.to[1] - moveAnimation.from[1]) * 100}%`,
+            ['--to-y' as never]: `${(moveAnimation.to[0] - moveAnimation.from[0]) * 100}%`,
+          }}
+        >
           <div
             style={{
-              position: 'absolute',
-              left: `${moveAnimation.from[1] * 12.5}%`,
-              top: `${moveAnimation.from[0] * 12.5}%`,
-              width: '12.5%',
-              height: '12.5%',
-              pointerEvents: 'none',
-              zIndex: 4,
-              animation: `move-travel ${moveAnimation.durationMs}ms cubic-bezier(0.2, 0.8, 0.2, 1) ${moveAnimation.delayMs}ms forwards`,
-              ['--move-dx' as never]: animationDelta.dx,
-              ['--move-dy' as never]: animationDelta.dy,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div style={{ width: '80%', height: '80%' }}>
-                <Piece piece={moveAnimation.piece} />
-              </div>
+            <div style={{ width: '80%', height: '80%' }}>
+              <Piece piece={moveAnimation.piece} />
             </div>
           </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              left: `${moveAnimation.to[1] * 12.5}%`,
-              top: `${moveAnimation.to[0] * 12.5}%`,
-              width: '12.5%',
-              height: '12.5%',
-              pointerEvents: 'none',
-              zIndex: 3,
-              borderRadius: '50%',
-              border: `1px solid ${moveAnimation.actor === 'ai' ? '#F0F8FF' : '#67E8F9'}`,
-              animation: `move-pulse ${moveAnimation.durationMs}ms ease-in-out ${moveAnimation.delayMs}ms`,
-            }}
-          />
-        </>
+        </div>
       )}
     </div>
   )

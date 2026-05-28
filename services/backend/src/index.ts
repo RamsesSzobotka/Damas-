@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { initializeDatabase } from './database/Database'
 import { gameRoutes, addGameConnection, removeGameConnection, broadcastToGame } from '@/routes/game'
+import { authRoute } from '@/routes/auth'
 import { getGame, handlePlayerMove } from '@/services/gameService'
 
 const app = new Hono()
@@ -23,8 +24,9 @@ app.get('/health', (c) => {
   })
 })
 
-// Registrar rutas de juego (REST)
+// Registrar rutas (REST)
 app.route('/', gameRoutes)
+app.route('/', authRoute)
 
 // Inicializar base de datos y arrancar servidor
 const PORT = parseInt(process.env.PORT || '3001')

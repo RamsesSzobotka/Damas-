@@ -6,6 +6,7 @@ import {
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
+import { ClerkProvider } from '@clerk/tanstack-react-start'
 import '../styles/globals.css'
 
 export const Route = createRootRoute({
@@ -35,15 +36,19 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
   return (
-    <html>
-      <head>
-        <HeadContent />
-      </head>
-      <body className="min-h-screen" style={{ backgroundColor: '#0B0D2B', color: '#FFFFFF' }}>
-        {children}
-        <Scripts />
-      </body>
-    </html>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <html>
+        <head>
+          <HeadContent />
+        </head>
+        <body className="min-h-screen" style={{ backgroundColor: '#0B0D2B', color: '#FFFFFF' }}>
+          {children}
+          <Scripts />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

@@ -16,8 +16,17 @@ type MoveAnimation = {
   durationMs: number
 }
 
-const PLAYER_MOVE_DELAY_MS = 150
-const AI_MOVE_DELAY_MS = 320
+type PendingMove = {
+  board: number[][]
+  animation: MoveAnimation
+  nextPlayerValue: number
+  nextForcedPiece: [number, number] | null
+  isGameOver: boolean
+}
+
+const PLAYER_MOVE_DURATION_MS = 700
+const AI_MOVE_DURATION_MS = 850
+const INTER_MOVE_DELAY_MS = 200
 
 const clearTimer = (timer: ReturnType<typeof setTimeout> | null): void => {
   if (timer) {
@@ -45,14 +54,21 @@ export function useGame(difficulty: string) {
   const playerBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const aiBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animationClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const interMoveDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const moveQueueRef = useRef<PendingMove[]>([])
+  const isProcessingMoveRef = useRef(false)
 
   const clearTimers = useCallback(() => {
     clearTimer(playerBoardTimerRef.current)
     clearTimer(aiBoardTimerRef.current)
     clearTimer(animationClearTimerRef.current)
+    clearTimer(interMoveDelayTimerRef.current)
     playerBoardTimerRef.current = null
     aiBoardTimerRef.current = null
     animationClearTimerRef.current = null
+    interMoveDelayTimerRef.current = null
+    moveQueueRef.current = []
+    isProcessingMoveRef.current = false
   }, [])
 
   useEffect(() => () => clearTimers(), [clearTimers])
@@ -93,7 +109,54 @@ export function useGame(difficulty: string) {
     useGameStore.getState().setResult(value)
   }, [])
 
-  const scheduleBoardUpdate = useCallback(
+  const processQueuedMove = useCallback(() => {
+    if (isProcessingMoveRef.current) return
+
+    const nextMove = moveQueueRef.current.shift()
+    if (!nextMove) return
+
+    isProcessingMoveRef.current = true
+    clearTimer(animationClearTimerRef.current)
+    clearTimer(interMoveDelayTimerRef.current)
+    
+    // Show the animation on the CURRENT board state
+    setMoveAnimation(nextMove.animation)
+
+    // Wait for the animation to finish
+    // THEN update the board so the piece doesn't jump while animating
+    const totalAnimationTime = nextMove.animation.durationMs
+
+    animationClearTimerRef.current = setTimeout(() => {
+      // Animation finished, now update the board state
+      setBoard(nextMove.board)
+      setCurrentPlayer(nextMove.nextPlayerValue)
+
+      if (nextMove.nextForcedPiece) {
+        setForcedPiece(nextMove.nextForcedPiece)
+        setSelectedPiece(nextMove.nextForcedPiece)
+      } else {
+        setForcedPiece(null)
+        setSelectedPiece(null)
+      }
+
+      // Clear the animation visual
+      setMoveAnimation(null)
+
+      if (nextMove.isGameOver) {
+        isProcessingMoveRef.current = false
+        processQueuedMove()
+        return
+      }
+
+      // Add a small gap before processing the next move
+      interMoveDelayTimerRef.current = setTimeout(() => {
+        isProcessingMoveRef.current = false
+        processQueuedMove()
+      }, INTER_MOVE_DELAY_MS)
+    }, totalAnimationTime)
+  }, [setBoard, setCurrentPlayer, setSelectedPiece])
+
+  const queueMoveAnimation = useCallback(
     (
       nextBoard: number[][],
       animation: MoveAnimation,
@@ -101,36 +164,17 @@ export function useGame(difficulty: string) {
       nextForcedPiece: [number, number] | null,
       isGameOver: boolean,
     ) => {
-      clearTimer(animationClearTimerRef.current)
-      setMoveAnimation(animation)
+      moveQueueRef.current.push({
+        board: nextBoard,
+        animation,
+        nextPlayerValue,
+        nextForcedPiece,
+        isGameOver,
+      })
 
-      const boardTimerRef = animation.actor === 'player' ? playerBoardTimerRef : aiBoardTimerRef
-      const boardDelay = animation.actor === 'player' ? PLAYER_MOVE_DELAY_MS : AI_MOVE_DELAY_MS
-
-      clearTimer(boardTimerRef.current)
-      boardTimerRef.current = setTimeout(() => {
-        setBoard(nextBoard)
-        setCurrentPlayer(nextPlayerValue)
-
-        if (nextForcedPiece) {
-          setForcedPiece(nextForcedPiece)
-          setSelectedPiece(nextForcedPiece)
-        } else {
-          setForcedPiece(null)
-          setSelectedPiece(null)
-        }
-
-        if (isGameOver) {
-          setMoveAnimation(null)
-          return
-        }
-
-        animationClearTimerRef.current = setTimeout(() => {
-          setMoveAnimation(null)
-        }, animation.durationMs)
-      }, boardDelay)
+      processQueuedMove()
     },
-    [setBoard, setCurrentPlayer, setSelectedPiece],
+    [processQueuedMove],
   )
 
   useEffect(() => {
@@ -201,6 +245,7 @@ export function useGame(difficulty: string) {
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       const data = event.data as Record<string, unknown>
+      const lastMove = data.lastMove as { from?: unknown; to?: unknown } | undefined
 
       switch (data.type) {
         case 'game_state':
@@ -212,9 +257,9 @@ export function useGame(difficulty: string) {
           setStatus((data.status === 'gameOver' ? 'gameOver' : 'playing'))
           break
         case 'move_applied':
-          if (Array.isArray(data.lastMove?.from) && Array.isArray(data.lastMove?.to)) {
-            const from = data.lastMove.from as [number, number]
-            const to = data.lastMove.to as [number, number]
+          if (Array.isArray(lastMove?.from) && Array.isArray(lastMove?.to)) {
+            const from = lastMove.from as [number, number]
+            const to = lastMove.to as [number, number]
             const sourceBoard = useGameStore.getState().board
             const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
@@ -223,15 +268,15 @@ export function useGame(difficulty: string) {
               { player: 'player', from, to },
             ])
 
-            scheduleBoardUpdate(
+            queueMoveAnimation(
               data.board as number[][],
               {
                 from,
                 to,
                 piece,
                 actor: 'player',
-                delayMs: PLAYER_MOVE_DELAY_MS,
-                durationMs: 240,
+                delayMs: 0,
+                durationMs: PLAYER_MOVE_DURATION_MS,
               },
               typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
               Array.isArray(data.forcedPiece) ? (data.forcedPiece as [number, number]) : null,
@@ -240,9 +285,9 @@ export function useGame(difficulty: string) {
           }
           break
         case 'ai_move':
-          if (Array.isArray(data.lastMove?.from) && Array.isArray(data.lastMove?.to)) {
-            const from = data.lastMove.from as [number, number]
-            const to = data.lastMove.to as [number, number]
+          if (Array.isArray(lastMove?.from) && Array.isArray(lastMove?.to)) {
+            const from = lastMove.from as [number, number]
+            const to = lastMove.to as [number, number]
             const sourceBoard = useGameStore.getState().board
             const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
@@ -251,15 +296,15 @@ export function useGame(difficulty: string) {
               { player: 'ai', from, to },
             ])
 
-            scheduleBoardUpdate(
+            queueMoveAnimation(
               data.board as number[][],
               {
                 from,
                 to,
                 piece,
                 actor: 'ai',
-                delayMs: AI_MOVE_DELAY_MS,
-                durationMs: 320,
+                delayMs: 0,
+                durationMs: AI_MOVE_DURATION_MS,
               },
               typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
               null,
@@ -286,7 +331,7 @@ export function useGame(difficulty: string) {
           break
       }
     },
-    [clearTimers, scheduleBoardUpdate, setBoard, setCurrentPlayer, setError, setResult, setStatus],
+    [clearTimers, queueMoveAnimation, setBoard, setCurrentPlayer, setError, setResult, setStatus],
   )
 
   const ws = useWebSocket(wsUrl, {
