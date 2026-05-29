@@ -24,19 +24,15 @@ const pixelFont = {
 interface MenuItem {
   icon: string
   label: string
-  action: 'retos' | 'quickplay' | 'rankings' | 'shop' | 'customize'
+  action: 'jugar' | 'quickplay' | 'retos' | 'rankings' | 'shop' | 'customize'
   description?: string
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { icon: '▶', label: 'JUGAR', action: 'quickplay', description: 'Partida ranked vs IA' },
-  { icon: '🏆', label: 'RETOS', action: 'retos', description: 'Práctica: elige dificultad vs IA' },
+  { icon: '▶', label: 'JUGAR', action: 'jugar', description: 'Partida ranked vs IA' },
   { icon: '📊', label: 'RANKINGS', action: 'rankings', description: 'Tabla de puntuaciones' },
   { icon: '🛍️', label: 'TIENDA', action: 'shop', description: 'Comprar skins' },
-  { icon: '🎨', label: 'PERSONALIZAR', action: 'customize', description: 'Fichas, tablero y animaciones' },
 ]
-
-
 
 interface CosmicButtonProps {
   icon: string
@@ -45,9 +41,10 @@ interface CosmicButtonProps {
   onClick: () => void
   isActive?: boolean
   index?: number
+  ariaExpanded?: boolean
 }
 
-function CosmicButton({ icon, label, description, onClick, isActive, index = 0 }: CosmicButtonProps) {
+function CosmicButton({ icon, label, description, onClick, isActive, index = 0, ariaExpanded }: CosmicButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
@@ -80,6 +77,7 @@ function CosmicButton({ icon, label, description, onClick, isActive, index = 0 }
       className="w-64 group transition-all duration-200"
       style={pixelFont}
       aria-pressed={isActive}
+      aria-expanded={ariaExpanded}
     >
       <div
         className="px-6 py-4 flex items-center gap-4"
@@ -300,31 +298,194 @@ function AuthSection() {
   )
 }
 
+interface SubmenuItem {
+  icon: string
+  label: string
+  action: 'quickplay' | 'retos' | 'customize'
+}
+
+const SUBMENU_ITEMS: SubmenuItem[] = [
+  { icon: '🏆', label: 'RANKED', action: 'quickplay' },
+  { icon: '🎯', label: 'RETOS', action: 'retos' },
+  { icon: '🎨', label: 'PERSONALIZACIÓN', action: 'customize' },
+]
+
+function JugarSubmenu({
+  isSignedIn,
+  isLoading,
+  onClose,
+  onNavigate,
+}: {
+  isSignedIn: boolean
+  isLoading: boolean
+  onClose: () => void
+  onNavigate: (action: SubmenuItem['action']) => void
+}) {
+  const [entered, setEntered] = useState(false)
+  const [exiting, setExiting] = useState(false)
+
+  useEffect(() => {
+    requestAnimationFrame(() => setEntered(true))
+  }, [])
+
+  const handleClose = () => {
+    setExiting(true)
+    setTimeout(onClose, 150)
+  }
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose()
+    }
+  }
+
+  return (
+    <div
+      onClick={handleBackdropClick}
+      role="presentation"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 40,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: entered && !exiting ? 'rgba(11, 13, 43, 0.85)' : 'rgba(11, 13, 43, 0)',
+        transition: 'background-color 200ms ease-out',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-label="Opciones de juego"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: COLORS.spacePanel,
+          border: `2px solid ${COLORS.magenta}`,
+          borderRadius: '4px',
+          padding: '32px 28px',
+          boxShadow: `
+            0 0 16px rgba(192, 38, 211, 0.3),
+            0 0 32px rgba(103, 232, 249, 0.1),
+            inset 0 0 16px rgba(192, 38, 211, 0.05)
+          `,
+          opacity: entered && !exiting ? 1 : 0,
+          transform: entered && !exiting ? 'scale(1)' : 'scale(0.95)',
+          transition: 'opacity 250ms ease-out, transform 250ms ease-out',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          minWidth: '280px',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            ...pixelFont,
+            color: COLORS.cyan,
+            fontSize: '14px',
+            marginBottom: '16px',
+            textShadow: `0 0 8px ${COLORS.cyan}`,
+          }}
+        >
+          ELIGE UN MODO
+        </p>
+
+        {SUBMENU_ITEMS.map((item, i) => (
+          <div
+            key={item.action}
+            style={{
+              animation: entered && !exiting ? 'float 3s ease-in-out infinite' : 'none',
+              animationDelay: `${0.3 + i * 0.15}s`,
+            }}
+          >
+            <CosmicButton
+              icon={item.icon}
+              label={item.label}
+              onClick={() => onNavigate(item.action)}
+              isActive={isLoading}
+              index={i + 3}
+            />
+          </div>
+        ))}
+
+        <button
+          onClick={handleClose}
+          aria-label="Volver al menú principal"
+          style={{
+            marginTop: '12px',
+            fontFamily: '"Press Start 2P", monospace',
+            ...pixelFont,
+            fontSize: '11px',
+            color: COLORS.textSpace,
+            backgroundColor: 'transparent',
+            border: `1px solid ${COLORS.textSpace}`,
+            padding: '10px 24px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = COLORS.cyan
+            e.currentTarget.style.borderColor = COLORS.cyan
+            e.currentTarget.style.boxShadow = `0 0 8px ${COLORS.cyan}`
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = COLORS.textSpace
+            e.currentTarget.style.borderColor = COLORS.textSpace
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+        >
+          ← VOLVER
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function MainMenu() {
   const navigate = useNavigate()
   const { isSignedIn } = useUser()
   const [isLoading, setIsLoading] = useState(false)
+  const [showSubmenu, setShowSubmenu] = useState(false)
 
   const handleMenuAction = async (action: MenuItem['action']) => {
+    if (action === 'jugar') {
+      setShowSubmenu(true)
+      return
+    }
+
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 200))
 
     try {
+      const routes: Record<string, string> = {
+        rankings: '/rankings',
+        shop: '/shop',
+      }
+      await navigate({ to: routes[action] })
+    } catch (error) {
+      console.error('Navigation failed:', error)
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmenuAction = async (action: SubmenuItem['action']) => {
+    if (isLoading) return
+    setIsLoading(true)
+
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    try {
       if (action === 'quickplay') {
-        // JUGAR (ranked): requiere auth. Si no autenticado, redirigir a RETOS
         if (!isSignedIn) {
           await navigate({ to: '/game/difficulty' })
         } else {
           await navigate({ to: '/game/play', search: { difficulty: 'principiante', mode: 'ranked' } })
         }
-      } else {
-        const routes: Record<Exclude<MenuItem['action'], 'quickplay'>, string> = {
-          retos: '/game/difficulty',
-          rankings: '/rankings',
-          shop: '/shop',
-          customize: '/customize',
-        }
-        await navigate({ to: routes[action] })
+      } else if (action === 'retos') {
+        await navigate({ to: '/game/difficulty' })
+      } else if (action === 'customize') {
+        await navigate({ to: '/customize' })
       }
     } catch (error) {
       console.error('Navigation failed:', error)
@@ -402,10 +563,20 @@ export default function MainMenu() {
                 onClick={() => handleMenuAction(item.action)}
                 isActive={isLoading}
                 index={i}
+                ariaExpanded={item.action === 'jugar' ? showSubmenu : undefined}
               />
             ))}
           </div>
         </div>
+
+        {showSubmenu && (
+          <JugarSubmenu
+            isSignedIn={!!isSignedIn}
+            isLoading={isLoading}
+            onClose={() => setShowSubmenu(false)}
+            onNavigate={handleSubmenuAction}
+          />
+        )}
 
         {isLoading && (
           <div className="mt-8 flex items-center gap-3">
