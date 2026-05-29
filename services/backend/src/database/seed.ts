@@ -4,6 +4,7 @@ import { SKIN_COLLECTION } from '@/models/Skin'
 interface SeedSkin {
   name: string
   description: string
+  type?: string
   primaryColor: string
   secondaryColor: string
   imageUrl: string
@@ -51,6 +52,52 @@ const SEED_SKINS: SeedSkin[] = [
     imageUrl: 'https://via.placeholder.com/200x200/87CEEB/000000?text=Azul+Claro',
     previewUrl: 'https://via.placeholder.com/400x400/87CEEB/000000?text=Fichas+Azul+Claro',
   },
+  // Boards
+  {
+    name: 'Tablero Clásico',
+    description: 'Tablero con colores clásicos en tonos púrpura. Un estilo elegante y tradicional.',
+    type: 'board',
+    primaryColor: '#1E1050',
+    secondaryColor: '#6B5FAF',
+    imageUrl: 'https://via.placeholder.com/200x200/1E1050/FFFFFF?text=Clasico',
+    previewUrl: 'https://via.placeholder.com/400x400/1E1050/FFFFFF?text=Tablero+Clasico',
+  },
+  {
+    name: 'Tablero Noche & Día',
+    description: 'Tablero en blanco y negro. Máximo contraste para una visibilidad perfecta.',
+    type: 'board',
+    primaryColor: '#0D0D0D',
+    secondaryColor: '#F0F0F0',
+    imageUrl: 'https://via.placeholder.com/200x200/0D0D0D/FFFFFF?text=Noche',
+    previewUrl: 'https://via.placeholder.com/400x400/0D0D0D/FFFFFF?text=Tablero+Noche',
+  },
+  {
+    name: 'Tablero Bosque',
+    description: 'Tablero en tonos verdes. Una experiencia natural y fresca.',
+    type: 'board',
+    primaryColor: '#1A3A1A',
+    secondaryColor: '#90EE90',
+    imageUrl: 'https://via.placeholder.com/200x200/1A3A1A/FFFFFF?text=Bosque',
+    previewUrl: 'https://via.placeholder.com/400x400/1A3A1A/FFFFFF?text=Tablero+Bosque',
+  },
+  {
+    name: 'Tablero Atlántico',
+    description: 'Tablero en tonos azules. Sumérgete en partidas con estilo oceánico.',
+    type: 'board',
+    primaryColor: '#003366',
+    secondaryColor: '#87CEEB',
+    imageUrl: 'https://via.placeholder.com/200x200/003366/FFFFFF?text=Atlantico',
+    previewUrl: 'https://via.placeholder.com/400x400/003366/FFFFFF?text=Tablero+Atlantico',
+  },
+  {
+    name: 'Tablero Atardecer',
+    description: 'Tablero en tonos púrpura y naranja. Un atardecer en cada partida.',
+    type: 'board',
+    primaryColor: '#4A0E3B',
+    secondaryColor: '#FF9966',
+    imageUrl: 'https://via.placeholder.com/200x200/4A0E3B/FFFFFF?text=Atardecer',
+    previewUrl: 'https://via.placeholder.com/400x400/4A0E3B/FFFFFF?text=Tablero+Atardecer',
+  },
 ]
 
 export async function seedShopSkins(): Promise<void> {
@@ -71,7 +118,7 @@ export async function seedShopSkins(): Promise<void> {
 
       await skinsCollection.insertOne({
         ...skin,
-        type: 'piece',
+        type: skin.type || 'piece',
         rarity: 'common',
         price: 199,
         currency: 'USD',

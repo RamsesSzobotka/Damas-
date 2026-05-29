@@ -20,6 +20,8 @@ interface Props {
   } | null
   playerSkinColor?: string
   playerSecondaryColor?: string
+  boardDarkColor?: string
+  boardLightColor?: string
 }
 
 export default function GameBoard({
@@ -30,6 +32,8 @@ export default function GameBoard({
   moveAnimation,
   playerSkinColor,
   playerSecondaryColor,
+  boardDarkColor,
+  boardLightColor,
 }: Props) {
   const moves = useMemo(
     () =>
@@ -76,6 +80,8 @@ export default function GameBoard({
               onClick={() => onSquareClick(rowIdx, colIdx)}
               playerSkinColor={playerSkinColor}
               playerSecondaryColor={playerSecondaryColor}
+              darkColor={boardDarkColor}
+              lightColor={boardLightColor}
             />
           )
         }),

@@ -50,7 +50,7 @@ function ProductCard({
   owned,
   isSignedIn,
 }: {
-  product: { id: string; name: string; description: string; price: string; rarity: string; skinId: string; primaryColor: string; secondaryColor: string }
+  product: { id: string; name: string; description: string; price: string; rarity: string; skinId: string; primaryColor: string; secondaryColor: string; type?: string }
   onBuy: () => void
   purchasing: boolean
   owned: boolean
@@ -116,26 +116,54 @@ function ProductCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="w-full p-4 flex flex-col items-center gap-3">
-        {/* Piece preview with actual color */}
-        <div
-          className="w-24 h-24 rounded-full flex items-center justify-center"
-          style={{
-            backgroundColor: `${primaryColor}22`,
-            border: `3px solid ${owned ? '#22c55e' : primaryColor}`,
-            boxShadow: owned
-              ? `0 0 12px rgba(34, 197, 94, 0.3), inset 0 0 8px rgba(34, 197, 94, 0.2)`
-              : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
-          }}
-        >
+        {/* Preview: board 4x4 grid or piece circular preview */}
+        {product.type === 'board' ? (
           <div
-            className="w-14 h-14 rounded-full"
             style={{
-              background: `radial-gradient(circle at 35% 35%, ${primaryColor}, ${secondaryColor})`,
-              boxShadow: `0 0 12px ${primaryColor}88, inset 0 -3px 6px rgba(0,0,0,0.4)`,
-              border: `2px solid ${owned ? '#22c55e' : 'rgba(255,255,255,0.2)'}`,
+              width: '96px',
+              height: '96px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              border: `3px solid ${owned ? '#22c55e' : primaryColor}`,
+              boxShadow: owned
+                ? `0 0 12px rgba(34, 197, 94, 0.3)`
+                : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
             }}
-          />
-        </div>
+          >
+            {Array.from({ length: 16 }).map((_, i) => {
+              const r = Math.floor(i / 4)
+              const c = i % 4
+              return (
+                <div
+                  key={i}
+                  style={{
+                    backgroundColor: (r + c) % 2 !== 0 ? primaryColor : secondaryColor,
+                  }}
+                />
+              )
+            })}
+          </div>
+        ) : (
+          <div
+            className="w-24 h-24 rounded-full flex items-center justify-center"
+            style={{
+              backgroundColor: `${primaryColor}22`,
+              border: `3px solid ${owned ? '#22c55e' : primaryColor}`,
+              boxShadow: owned
+                ? `0 0 12px rgba(34, 197, 94, 0.3), inset 0 0 8px rgba(34, 197, 94, 0.2)`
+                : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
+            }}
+          >
+            <div
+              className="w-14 h-14 rounded-full"
+              style={{
+                background: `radial-gradient(circle at 35% 35%, ${primaryColor}, ${secondaryColor})`,
+                boxShadow: `0 0 12px ${primaryColor}88, inset 0 -3px 6px rgba(0,0,0,0.4)`,
+                border: `2px solid ${owned ? '#22c55e' : 'rgba(255,255,255,0.2)'}`,
+              }}
+            />
+          </div>
+        )}
 
         {/* Rarity badge */}
         <span
@@ -530,6 +558,7 @@ export default function ShopContainer() {
                       skinId: skin._id,
                       primaryColor: skin.primaryColor,
                       secondaryColor: skin.secondaryColor,
+                      type: skin.type,
                     }}
                     onBuy={() => handleBuy(skin._id)}
                     purchasing={purchasing}

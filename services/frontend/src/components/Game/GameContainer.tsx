@@ -48,6 +48,8 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
   const reset = useGameStore((s) => s.reset)
   const [playerSkinColor, setPlayerSkinColor] = useState<string | undefined>()
   const [playerSecondaryColor, setPlayerSecondaryColor] = useState<string | undefined>()
+  const [boardDarkColor, setBoardDarkColor] = useState<string | undefined>()
+  const [boardLightColor, setBoardLightColor] = useState<string | undefined>()
   const [playerLeague, setPlayerLeague] = useState<string | null>(null)
   const [playerPoints, setPlayerPoints] = useState<number>(0)
 
@@ -74,7 +76,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     rankingUpdate,
   } = useGame(difficulty, mode, getAuthToken)
 
-  // Fetch equipped skin
+  // Fetch equipped skin and board
   useEffect(() => {
     if (!isSignedIn) return
     ;(async () => {
@@ -85,10 +87,19 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
         })
         if (res.ok) {
           const data = await res.json()
-          const equipped = data.ownedSkins?.find((s: any) => s.isEquipped)
-          if (equipped) {
-            setPlayerSkinColor(equipped.primaryColor)
-            setPlayerSecondaryColor(equipped.secondaryColor)
+          const equippedPiece = data.ownedSkins?.find(
+            (s: any) => s.isEquipped && (s.equipType === 'piece' || s.equipType === null)
+          )
+          if (equippedPiece) {
+            setPlayerSkinColor(equippedPiece.primaryColor)
+            setPlayerSecondaryColor(equippedPiece.secondaryColor)
+          }
+          const equippedBoard = data.ownedSkins?.find(
+            (s: any) => s.isEquipped && s.equipType === 'board'
+          )
+          if (equippedBoard) {
+            setBoardDarkColor(equippedBoard.primaryColor || '#1A1040')
+            setBoardLightColor(equippedBoard.secondaryColor || '#4C3F91')
           }
         }
       } catch {}
@@ -415,6 +426,8 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
                 moveAnimation={moveAnimation}
                 playerSkinColor={playerSkinColor}
                 playerSecondaryColor={playerSecondaryColor}
+                boardDarkColor={boardDarkColor}
+                boardLightColor={boardLightColor}
               />
             ) : (
               <p

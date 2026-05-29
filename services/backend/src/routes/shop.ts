@@ -112,7 +112,8 @@ shopRoute.get('/api/shop/owned-skins', async (c) => {
     const skins = await skinsCol.find({ _id: { $in: skinIds } }).toArray()
 
     const skinMap = new Map(skins.map(s => [s._id.toString(), s]))
-    const equipped = userSkins.find(us => us.isEquipped)
+    const equippedPiece = userSkins.find(us => us.isEquipped && (us.equipType === 'piece' || !us.equipType))
+    const equippedBoard = userSkins.find(us => us.isEquipped && us.equipType === 'board')
 
     const ownedSkins = userSkins.map(us => {
       const skin = skinMap.get(us.skinId.toString())
@@ -130,7 +131,11 @@ shopRoute.get('/api/shop/owned-skins', async (c) => {
       }
     })
 
-    return c.json({ ownedSkins, equippedId: equipped?.skinId.toString() || null })
+    return c.json({
+      ownedSkins,
+      equippedPieceId: equippedPiece?.skinId.toString() || null,
+      equippedBoardId: equippedBoard?.skinId.toString() || null,
+    })
   } catch (error) {
     console.error('Error fetching owned skins:', error)
     return c.json({ error: 'Error interno del servidor' }, 500)
@@ -139,8 +144,9 @@ shopRoute.get('/api/shop/owned-skins', async (c) => {
 
 /**
  * POST /api/shop/equip
- * Establece una skin como equipada (desmarca las demás).
- * Body: { skinId: string }
+ * Establece una skin como equipada (desmarca las demás del mismo tipo).
+ * Body: { skinId: string, equipType?: 'piece' | 'board' }
+ * Legacy: equipType = null se trata como 'piece'.
  */
 shopRoute.post('/api/shop/equip', async (c) => {
   try {
@@ -160,10 +166,12 @@ shopRoute.post('/api/shop/equip', async (c) => {
       return c.json({ error: 'Token inválido' }, 401)
     }
 
-    const { skinId } = await c.req.json()
+    const { skinId, equipType } = await c.req.json()
     if (!skinId) {
       return c.json({ error: 'skinId requerido' }, 400)
     }
+
+    const type = equipType || 'piece'
 
     const users = getDatabase().getCollection(USER_COLLECTION)
     const user = await users.findOne({ clerkId })
@@ -171,23 +179,38 @@ shopRoute.post('/api/shop/equip', async (c) => {
 
     const userSkinsCol = getDatabase().getCollection(USER_SKIN_COLLECTION)
 
-    // Desmarcar todas las skins equipadas de este usuario
-    await userSkinsCol.updateMany(
-      { userId: user._id, isEquipped: true },
-      { $set: { isEquipped: false, updatedAt: new Date() } }
-    )
+    // Desmarcar solo del mismo tipo (legacy: sin equipType se trata como 'piece')
+    if (type === 'piece') {
+      await userSkinsCol.updateMany(
+        {
+          userId: user._id,
+          isEquipped: true,
+          $or: [
+            { equipType: 'piece' },
+            { equipType: { $exists: false } },
+            { equipType: null },
+          ],
+        },
+        { $set: { isEquipped: false, updatedAt: new Date() } }
+      )
+    } else {
+      await userSkinsCol.updateMany(
+        { userId: user._id, isEquipped: true, equipType: 'board' },
+        { $set: { isEquipped: false, updatedAt: new Date() } }
+      )
+    }
 
     // Marcar la skin seleccionada como equipada
     const result = await userSkinsCol.updateOne(
       { userId: user._id, skinId: new ObjectId(skinId) },
-      { $set: { isEquipped: true, updatedAt: new Date() } }
+      { $set: { isEquipped: true, equipType: type, updatedAt: new Date() } }
     )
 
     if (result.matchedCount === 0) {
       return c.json({ error: 'No tienes esa skin' }, 404)
     }
 
-    return c.json({ success: true, equippedId: skinId })
+    return c.json({ success: true, equippedId: skinId, equipType: type })
   } catch (error) {
     console.error('Error equipping skin:', error)
     return c.json({ error: 'Error interno del servidor' }, 500)

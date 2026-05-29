@@ -11,6 +11,8 @@ interface Props {
   onClick: () => void
   playerSkinColor?: string
   playerSecondaryColor?: string
+  darkColor?: string
+  lightColor?: string
 }
 
 export default function BoardSquare({
@@ -22,6 +24,8 @@ export default function BoardSquare({
   onClick,
   playerSkinColor,
   playerSecondaryColor,
+  darkColor = '#1A1040',
+  lightColor = '#4C3F91',
 }: Props) {
   const isDark = (row + col) % 2 !== 0
 
@@ -29,7 +33,7 @@ export default function BoardSquare({
     <div
       onClick={onClick}
       style={{
-        backgroundColor: isDark ? '#1A1040' : '#4C3F91',
+        backgroundColor: isDark ? darkColor : lightColor,
         border: isSelected
           ? '2px solid #FFD700'
           : '1px solid rgba(255, 255, 255, 0.08)',
