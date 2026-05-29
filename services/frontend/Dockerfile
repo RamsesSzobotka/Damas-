@@ -18,4 +18,4 @@ RUN bun run build
 EXPOSE 3000
 
 # Comando para iniciar
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "dev", "--", "--host"]

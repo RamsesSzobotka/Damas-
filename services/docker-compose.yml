@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB
   mongodb:
@@ -47,7 +45,6 @@ services:
       - damas-network
     volumes:
       - ./backend/src:/app/src
-    command: bun run dev
 
   # IA Service
   ia:
@@ -67,7 +64,6 @@ services:
       - damas-network
     volumes:
       - ./ia/src:/app/src
-    command: bun run dev
 
   # Frontend Service
   frontend:
@@ -78,8 +74,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://backend:3001
-      VITE_IA_URL: http://ia:3002
+      VITE_API_URL: http://localhost:3001
+      VITE_IA_URL: http://localhost:3002
       VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
       VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
     depends_on:
@@ -89,7 +85,6 @@ services:
       - damas-network
     volumes:
       - ./frontend/src:/app/src
-    command: bun run dev
 
   # Nginx (Reverse Proxy - Opcional)
   nginx:

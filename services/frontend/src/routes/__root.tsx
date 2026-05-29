@@ -28,9 +28,17 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
   return (
     <RootDocument>
-      <Outlet />
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        appearance={clerkAppearance}
+        localization={clerkLocalization}
+      >
+        <Outlet />
+      </ClerkProvider>
     </RootDocument>
   )
 }
@@ -250,23 +258,15 @@ const clerkLocalization = {
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
-  const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
   return (
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      appearance={clerkAppearance}
-      localization={clerkLocalization}
-    >
-      <html>
-        <head>
-          <HeadContent />
-        </head>
-        <body className="min-h-screen" style={{ backgroundColor: '#0B0D2B', color: '#FFFFFF' }}>
-          {children}
-          <Scripts />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html>
+      <head>
+        <HeadContent />
+      </head>
+      <body className="min-h-screen" style={{ backgroundColor: '#0B0D2B', color: '#FFFFFF' }}>
+        {children}
+        <Scripts />
+      </body>
+    </html>
   )
 }

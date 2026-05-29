@@ -13,10 +13,24 @@ import { updateRankingAfterGame } from '@/services/rankingService'
 
 const app = new Hono()
 
+// Parsear CORS_ORIGIN desde variable de entorno
+const getCorsOrigin = () => {
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000'
+  // Si hay múltiples orígenes separados por coma, convertir a array
+  if (corsOrigin.includes(',')) {
+    return corsOrigin.split(',').map(o => o.trim())
+  }
+  return corsOrigin
+}
+
 // Middleware global
 app.use('*', cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: getCorsOrigin(),
   credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposeHeaders: ['Content-Length', 'X-JSON-Response-Count'],
+  maxAge: 600,
 }))
 app.use('*', logger())
 

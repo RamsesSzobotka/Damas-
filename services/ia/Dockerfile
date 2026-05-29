@@ -2,11 +2,11 @@ FROM oven/bun:1.3
 
 WORKDIR /app
 
-# Copiar package.json
-COPY package.json bun.lockb ./
+# Copiar package.json y lock file
+COPY package.json bun.lock ./
 
 # Instalar dependencias
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Copiar código fuente
 COPY . .
@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 3002
 
 # Comando para iniciar
-CMD ["bun", "start"]
+CMD ["bun", "run", "dev"]
