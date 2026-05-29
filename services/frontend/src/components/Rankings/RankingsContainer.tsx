@@ -69,9 +69,9 @@ interface MyStats {
 }
 
 const LEAGUE_COLORS: Record<string, string> = {
-  Principiante: '#67E8F9',
-  Intermedio: '#C026D3',
-  Master: '#FFD700',
+  'Plutón': '#67E8F9',
+  Nebulosa: '#C026D3',
+  'Quásar': '#FFD700',
   'Elite Cósmica': '#FF4500',
 }
 
@@ -258,7 +258,7 @@ export default function RankingsContainer() {
           className="mx-auto mb-4 flex gap-2 justify-center flex-wrap"
           style={{ maxWidth: '780px' }}
         >
-          {['all', 'Principiante', 'Intermedio', 'Master', 'Elite Cósmica'].map((l) => (
+          {['all', 'Plutón', 'Nebulosa', 'Quásar', 'Elite Cósmica'].map((l) => (
             <button
               key={l}
               onClick={() => setFilter(l)}
@@ -321,7 +321,7 @@ export default function RankingsContainer() {
               <div
                 className="grid gap-0"
                 style={{
-                  gridTemplateColumns: '50px 1fr 110px 90px 80px 70px',
+                  gridTemplateColumns: '100px 1fr 110px 90px 80px 70px',
                   borderBottom: `1px solid ${COLORS.magenta}`,
                   padding: '10px 12px',
                   fontFamily: 'VT323, monospace',
@@ -349,7 +349,7 @@ export default function RankingsContainer() {
                     key={entry.rank}
                     className="grid gap-0 items-center"
                     style={{
-                      gridTemplateColumns: '50px 1fr 110px 90px 80px 70px',
+                      gridTemplateColumns: '100px 1fr 110px 90px 80px 70px',
                       padding: '8px 12px',
                       borderBottom: `1px solid rgba(51, 51, 51, 0.6)`,
                       backgroundColor: isMe ? 'rgba(30, 37, 71, 0.9)' : 'transparent',

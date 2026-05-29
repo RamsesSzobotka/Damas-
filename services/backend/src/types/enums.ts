@@ -65,10 +65,10 @@ export interface League {
 }
 
 export const LEAGUES: League[] = [
-  { name: 'Principiante', title: 'Aprendiz Estelar', minPoints: 0, maxPoints: 400, difficulty: 'beginner', icon: '🌌' },
-  { name: 'Intermedio', title: 'Viajero Astral', minPoints: 401, maxPoints: 1000, difficulty: 'intermediate', icon: '⚡' },
-  { name: 'Master', title: 'Señor de las Estrellas', minPoints: 1001, maxPoints: 2000, difficulty: 'master', icon: '🧠' },
-  { name: 'Elite Cósmica', title: 'Titán Galáctico', minPoints: 2001, maxPoints: Infinity, difficulty: 'ultra', icon: '👾' },
+  { name: 'Plutón', title: 'Aprendiz Estelar', minPoints: 0, maxPoints: 400, difficulty: 'beginner', icon: '🪐' },
+  { name: 'Nebulosa', title: 'Viajero Astral', minPoints: 401, maxPoints: 1000, difficulty: 'intermediate', icon: '🌌' },
+  { name: 'Quásar', title: 'Señor de las Estrellas', minPoints: 1001, maxPoints: 2000, difficulty: 'master', icon: '💫' },
+  { name: 'Elite Cósmica', title: 'Titán Galáctico', minPoints: 2001, maxPoints: Infinity, difficulty: 'ultra', icon: '🌟' },
 ]
 
 // Títulos especiales para el Top 3 global

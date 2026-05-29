@@ -52,9 +52,9 @@ const BASE_WIN_POINTS: Record<string, number> = {
 
 /** Puntos base a perder por liga del jugador */
 const BASE_LOSE_POINTS: Record<string, number> = {
-  Principiante: 15,
-  Intermedio: 20,
-  Master: 25,
+  'Plutón': 15,
+  Nebulosa: 20,
+  'Quásar': 25,
   'Elite Cósmica': 30,
 }
 
@@ -289,12 +289,12 @@ export async function updateRankingAfterGame(
 
   // Mapear dificultad → liga de la IA
   const DIFFICULTY_LEAGUE_MAP: Record<string, string> = {
-    beginner: 'Principiante',
-    intermediate: 'Intermedio',
-    master: 'Master',
+    beginner: 'Plutón',
+    intermediate: 'Nebulosa',
+    master: 'Quásar',
     ultra: 'Elite Cósmica',
   }
-  const aiLeagueName = DIFFICULTY_LEAGUE_MAP[gameResult.difficulty] || 'Principiante'
+  const aiLeagueName = DIFFICULTY_LEAGUE_MAP[gameResult.difficulty] || 'Plutón'
   const aiLeague = LEAGUES.find((l) => l.name === aiLeagueName) || LEAGUES[0]
 
   // Calcular puntos

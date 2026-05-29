@@ -41,10 +41,10 @@ El sistema de ranking implementa un modelo competitivo tipo **ELO/Ligas** donde 
 
 | Liga | Rango de Puntos | Dificultad IA | Icono |
 |------|----------------|---------------|-------|
-| **Principiante** | 0 – 400 pts | `beginner` | 🌌 |
-| **Intermedio** | 401 – 1000 pts | `intermediate` | ⚡ |
-| **Master** | 1001 – 2000 pts | `master` | 🧠 |
-| **Elite Cósmica** | 2001+ pts | `ultra` | 👾 |
+| **Plutón** | 0 – 400 pts | `beginner` | 🪐 |
+| **Nebulosa** | 401 – 1000 pts | `intermediate` | 🌌 |
+| **Quásar** | 1001 – 2000 pts | `master` | 💫 |
+| **Elite Cósmica** | 2001+ pts | `ultra` | 🌟 |
 
 ### Títulos Especiales (Top 3 Global)
 
@@ -71,9 +71,9 @@ BASE_WIN_POINTS = {
 
 // Puntos base a perder por liga del jugador (derrota)
 BASE_LOSE_POINTS = {
-  Principiante:    15,
-  Intermedio:      20,
-  Master:          25,
+  'Plutón':       15,
+  Nebulosa:       20,
+  'Quásar':       25,
   'Elite Cósmica': 30,
 }
 ```
@@ -235,7 +235,7 @@ Obtiene el Top 100 del ranking global (paginado).
       "league": {
         "name": "Elite Cósmica",
         "title": "Titán Galáctico",
-        "icon": "👾",
+        "icon": "🌟",
         "minPoints": 2001,
         "maxPoints": "∞",
         "difficulty": "ultra"
@@ -266,9 +266,9 @@ Obtiene el ranking y estadísticas detalladas de un usuario específico.
   "username": "Player1",
   "rank": 42,
   "league": {
-    "name": "Master",
+    "name": "Quásar",
     "title": "Señor de las Estrellas",
-    "icon": "🧠",
+    "icon": "💫",
     "minPoints": 1001,
     "maxPoints": 2000,
     "difficulty": "master"
@@ -297,7 +297,7 @@ Obtiene el ranking y estadísticas detalladas de un usuario específico.
       "completedAt": "2026-05-28T...",
       "duration": 245,
       "totalMoves": 32,
-      "leagueAtPlay": "Intermedio"
+      "leagueAtPlay": "Nebulosa"
     }
   ]
 }
@@ -320,8 +320,8 @@ Endpoint ligero que solo devuelve la posición actual y datos de liga del usuari
   "rank": 42,
   "totalPoints": 1450,
   "league": {
-    "name": "Master",
-    "icon": "🧠",
+    "name": "Quásar",
+    "icon": "💫",
     "difficulty": "master",
     "minPoints": 1001,
     "maxPoints": 2000
@@ -338,10 +338,10 @@ Información pública de todas las ligas disponibles.
 ```json
 {
   "leagues": [
-    { "name": "Principiante", "minPoints": 0, "maxPoints": 400, "difficulty": "beginner", "icon": "🌌" },
-    { "name": "Intermedio", "minPoints": 401, "maxPoints": 1000, "difficulty": "intermediate", "icon": "⚡" },
-    { "name": "Master", "minPoints": 1001, "maxPoints": 2000, "difficulty": "master", "icon": "🧠" },
-    { "name": "Elite Cósmica", "minPoints": 2001, "maxPoints": "∞", "difficulty": "ultra", "icon": "👾" }
+    { "name": "Plutón", "minPoints": 0, "maxPoints": 400, "difficulty": "beginner", "icon": "🪐" },
+    { "name": "Nebulosa", "minPoints": 401, "maxPoints": 1000, "difficulty": "intermediate", "icon": "🌌" },
+    { "name": "Quásar", "minPoints": 1001, "maxPoints": 2000, "difficulty": "master", "icon": "💫" },
+    { "name": "Elite Cósmica", "minPoints": 2001, "maxPoints": "∞", "difficulty": "ultra", "icon": "🌟" }
   ]
 }
 ```
@@ -356,8 +356,8 @@ Cuando una partida en modo **ranked** termina, el backend envía un mensaje `ran
 {
   "type": "ranking_update",
   "pointsEarned": 85,
-  "leagueBefore": "Intermedio",
-  "leagueAfter": "Master",
+  "leagueBefore": "Nebulosa",
+  "leagueAfter": "Quásar",
   "won": true,
   "streak": 4,
   "totalPoints": 1050
@@ -387,7 +387,7 @@ Tabla de líderes con estilo arcade espacial:
 
 - **Columnas:** #, Jugador, Liga, Puntos, Victorias, Win Rate
 - **Top 3:** Resaltados con bordes dorado/plateado/bronce y títulos especiales
-- **Filtros:** Todos / Principiante / Intermedio / Master / Elite Cósmica
+- **Filtros:** Todos / Plutón / Nebulosa / Quásar / Elite Cósmica
 - **Jugador actual:** Destacado con borde izquierdo dorado y ⭐
 - **Tarjeta "Tu Posición":** Muestra liga, puntos y progreso hacia la siguiente liga
 

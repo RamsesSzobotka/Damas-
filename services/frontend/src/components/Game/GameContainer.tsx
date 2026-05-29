@@ -28,17 +28,17 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 /** Colores por liga */
 const LEAGUE_COLORS: Record<string, string> = {
-  Principiante: '#67E8F9',
-  Intermedio: '#C026D3',
-  Master: '#FFD700',
+  'Plutón': '#67E8F9',
+  Nebulosa: '#C026D3',
+  'Quásar': '#FFD700',
   'Elite Cósmica': '#FF4500',
 }
 
 const LEAGUE_ICONS: Record<string, string> = {
-  Principiante: '🌌',
-  Intermedio: '⚡',
-  Master: '🧠',
-  'Elite Cósmica': '👾',
+  'Plutón': '🪐',
+  Nebulosa: '🌌',
+  'Quásar': '💫',
+  'Elite Cósmica': '🌟',
 }
 
 export default function GameContainer({ difficulty, routeMode = 'practice' }: Props) {
