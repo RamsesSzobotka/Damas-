@@ -17,17 +17,19 @@ export interface AIMoveResponse {
  * Solicita un movimiento al servicio de IA
  * @param board - Estado actual del tablero (8x8)
  * @param currentPlayer - Jugador que debe mover (1 = humano, 2 = IA)
+ * @param difficulty - Dificultad (beginner | intermediate | master | ultra)
  * @returns Coordenadas del movimiento calculado, o null si no hay movimientos disponibles o hay error
  */
 export async function calculateMove(
   board: number[][],
-  currentPlayer: number
+  currentPlayer: number,
+  difficulty: string = 'beginner'
 ): Promise<AIMoveResponse | null> {
   try {
     const response = await fetch(`${IA_SERVICE_URL}/calculate-move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ board, currentPlayer }),
+      body: JSON.stringify({ board, currentPlayer, difficulty }),
     })
 
     if (!response.ok) {

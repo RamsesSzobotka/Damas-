@@ -434,8 +434,9 @@ export async function handlePlayerMove(
     }
   }
 
-  // Solicitar movimiento a la IA
-  const aiResponse = await calculateMove(currentBoard, 2) // currentPlayer=2 (IA)
+  // Solicitar movimiento a la IA según dificultad
+  const difficulty = (game as any).difficulty || 'beginner'
+  const aiResponse = await calculateMove(currentBoard, 2, difficulty)
 
   if (!aiResponse) {
     // La IA no tiene movimientos disponibles (sin fichas o bloqueada) → jugador gana
