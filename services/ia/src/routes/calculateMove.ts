@@ -5,6 +5,7 @@ import type { Board } from '@models/Board'
 import { getBeginnerMove } from '@algorithms/beginner'
 import { getIntermediateMove } from '@difficulty/intermediate'
 import { getMasterMove } from '@difficulty/master'
+import { getUltraMove } from '@difficulty/ultra'
 
 const calculateSchema = z.object({
   board: z.array(z.array(z.number().min(0).max(4))).length(8),
@@ -35,8 +36,7 @@ calculateRoute.post('/calculate-move', async (c) => {
         move = getIntermediateMove(board as Board, currentPlayer)
         break
       case 'ultra':
-        // Ultra no implementado aún — fallback a master
-        move = getMasterMove(board as Board, currentPlayer)
+        move = getUltraMove(board as Board, currentPlayer)
         break
       case 'beginner':
       default:

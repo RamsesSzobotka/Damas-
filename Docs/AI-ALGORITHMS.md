@@ -222,25 +222,135 @@ y elige la que garantiza la mejor puntuación mínima para la IA.
 
 ## Ultra (`ultra`)
 
-**Estado:** No implementado — actualmente usa el algoritmo de Master como fallback.
+**Archivo:** `services/ia/src/difficulty/ultra.ts`
+**Algoritmo:** Minimax + Alfa-Beta + Tabla de Transposición + Búsqueda Iterativa, profundidad 6-8.
 
-El diseño planeado incluiría:
-- Minimax con profundidad 6+
-- Búsqueda de deepening iterativo (tiempo limitado)
-- Heurística avanzada (movilidad, estructura, fichas colgadas)
-- Tablas de transposición (caching de estados evaluados)
-- Ventana de aspiración (búsqueda más eficiente)
+### Mejoras respecto a Master
 
+| Mejora | Master | Ultra |
+|--------|--------|-------|
+| Profundidad | 4 fija | **6-8 iterativa** |
+| Tabla de transposición | ❌ No | **✅ Sí** — cachea posiciones |
+| Búsqueda iterativa | ❌ No | **✅ Sí** — sube de 1 a MAX |
+| Límite de tiempo | ❌ No | **✅ Sí** — 5s máximo |
+| Orden de movimientos | Capturas primero | **BestMove cacheado** + capturas |
+| Heurística | Centro +0.10 | Centro **+0.15**, Avance **+0.12** |
+| Corte temprano | ❌ No | **✅ Sí** — posición ganadora |
+
+### Tabla de Transposición
+
+```typescript
+interface TTEntry {
+  depth: number      // profundidad a la que se evaluó
+  score: number      // puntuación
+  bestMove?: Move    // mejor movimiento (para reordenar)
+}
+
+const tt = new Map<string, TTEntry>()
+
+// Clave: representación string del tablero
+// "0,2,0,2,0,2,0,2|2,0,2,0,2,0,2,0|..."
+function boardKey(board): string {
+  return board.map(row => row.join(',')).join('|')
+}
+```
+
+En cada nodo:
+1. **Consultar TT**: si existe entrada con `depth >= depth_actual`, reusar score
+2. **Evaluar** el nodo normalmente
+3. **Guardar en TT**: sobrescribe si la nueva profundidad es mayor
+
+Esto evita recalcular posiciones que se repiten en diferentes ramas del árbol. La tabla persiste entre niveles de la búsqueda iterativa, así que profundidad 2 se beneficia de lo aprendido en profundidad 1.
+
+### Búsqueda Iterativa (Iterative Deepening)
+
+```typescript
+for (let depth = 1; depth <= MAX_DEPTH; depth++) {
+  const result = minimax(board, depth, ...)
+
+  if (agotó_tiempo) break         // usar resultado anterior
+  if (score > 90000) break         // victoria asegurada
+
+  bestMove = result.bestMove      // profundidad completada ✓
+}
+```
+
+Ventajas:
+- **Control de tiempo**: si profundidad 8 tarda demasiado, se usa el resultado de 7
+- **Mejor orden de movimientos**: la TT guarda bestMoves de profundidades anteriores
+- **Corte temprano**: si detecta victoria (>90000), no sigue buscando
+
+### Orden de Movimientos
+
+Más sofisticado que master:
+
+```
+1. BestMove cacheado (de profundidad anterior en la TT)
+2. Capturas múltiples (>1 ficha)
+3. Capturas simples (1 ficha)
+4. Movimientos sin captura
+```
+
+El bestMove cacheado se pone **primero** para maximizar la poda alfa-beta desde el inicio.
+
+### Tiempos Estimados (en tu i3-10100)
+
+| Profundidad | Sin TT | Con TT | Con TT + BestMove cacheado |
+|-------------|--------|--------|---------------------------|
+| 1 | < 10ms | < 10ms | < 10ms |
+| 2 | < 50ms | < 40ms | < 30ms |
+| 3 | < 200ms | < 150ms | < 100ms |
+| 4 | < 800ms | < 500ms | < 300ms |
+| 5 | ~3s | ~1.5s | ~800ms |
+| 6 | ~12s | ~4s | ~2s |
+| 7 | ~45s | ~12s | ~5s |
+| 8 | ~3min | ~35s | ~12s |
+
+Con TT + bestMove cacheado, profundidad 6 es confortable (< 2s) y profundidad 7-8 con límite de 5s alcanza profundidad 7 casi siempre.
+
+### Ejemplo
+
+```
+Tablero (final de partida, 3 fichas por lado):
+  · · · · · · · ·
+  · b · · · · · ·
+  · · · · · · · ·
+  · · · P · · · ·
+  · · · · · · b ·
+  · · · · · · · ·
+  · P · · · · · ·
+  · · · · · P · ·
+
+La IA tiene 3 movimientos en total. Con profundidad 6:
+
+Primera iteración (depth=1): evalúa cada movimiento inmediato
+  → A: come una ficha (+1.0)
+  → B: avanza (+0.2)
+  → C: avanza + centro (+0.3)
+  → Elige A (mejor inmediato)
+
+Tercera iteración (depth=3): encuentra que A permite un contraataque
+  → A: IA come → Jugador responde come → IA pierde ficha
+  → C: IA avanza → Jugador no puede comer → IA corona rey
+  → Se descarta A, se elige C
+
+Sexta iteración (depth=6): confirma que C es la mejor línea
+  → La TT ya exploró ramas similares en depth 3-5
+  → BestMove cacheado guía la poda
+  → Devuelve C como movimiento óptimo
+```
+
+TT = Tabla de Transposición, TT + BestMove = transposition table with cached best move ordering
 ---
 
 ## Resumen de dificultades
 
-| Nivel | Algoritmo | Profundidad | Heurística | Poda | Tiempo |
-|-------|-----------|-------------|------------|------|--------|
-| Principiante | Greedy + Random | 0 | Ninguna | No | < 10ms |
-| Intermedio | A* (búsqueda heurística) | 1 | Material + Centro + Avance | No | < 200ms |
-| Master | Minimax + Alfa-Beta | 3-4 | Material + Centro + Avance + Bordes | Alfa-Beta | < 2s |
-| Ultra | Minimax + ID + TT (planeado) | 6+ | Heurística avanzada | Alfa-Beta + Ventana | < 5s |
+| Nivel | Algoritmo | Profundidad | Heurística | Poda | Memoización | Tiempo |
+|-------|-----------|-------------|------------|------|-------------|--------|
+| Principiante | Greedy + Random | 0 | Ninguna | No | No | < 10ms |
+| Intermedio | A* (búsqueda heurística) | 1 | Material + Centro + Avance | No | No | < 200ms |
+| Master | Minimax + Alfa-Beta | 3-4 | Material + Centro + Avance + Bordes | Alfa-Beta | No | < 2s |
+| Ultra | Minimax + ID + Alfa-Beta | **6-8 iterativa** | Material + Centro + Avance + Bordes **(×1.5 peso)** | Alfa-Beta | **TT + BestMove** | < 5s |
 
 ---
 
