@@ -9,6 +9,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { verifyToken } from '@clerk/backend'
 import { findOrCreateUser } from '@/services/userService'
+import { initializeRanking } from '@/services/rankingService'
 
 const authRoute = new Hono()
 
@@ -53,6 +54,11 @@ authRoute.post('/api/auth/sync', async (c) => {
     }
 
     const user = await findOrCreateUser(parsed.data)
+
+    // Inicializar ranking si es un usuario nuevo
+    if (user._id) {
+      await initializeRanking(user._id, user.username)
+    }
 
     return c.json({
       id: user._id?.toString(),

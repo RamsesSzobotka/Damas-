@@ -186,7 +186,7 @@ export default function DifficultySelect() {
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 200))
     try {
-      await navigate({ to: '/game/play', search: { difficulty } })
+      await navigate({ to: '/game/play', search: { difficulty, mode: 'practice' } })
     } catch (error) {
       console.error('Navigation failed:', error)
       setIsLoading(false)

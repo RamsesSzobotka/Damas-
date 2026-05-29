@@ -7,7 +7,9 @@ import { gameRoutes, addGameConnection, removeGameConnection, broadcastToGame } 
 import { authRoute } from '@/routes/auth'
 import { shopRoute } from '@/routes/shop'
 import { paymentRoute } from '@/routes/payment'
+import { rankingRoutes } from '@/routes/rankings'
 import { getGame, handlePlayerMove } from '@/services/gameService'
+import { updateRankingAfterGame } from '@/services/rankingService'
 
 const app = new Hono()
 
@@ -32,6 +34,7 @@ app.route('/', gameRoutes)
 app.route('/', authRoute)
 app.route('/', shopRoute)
 app.route('/', paymentRoute)
+app.route('/', rankingRoutes)
 
 // Inicializar base de datos y arrancar servidor
 const PORT = parseInt(process.env.PORT || '3001')
@@ -150,6 +153,57 @@ const server = Bun.serve<{ gameId: string }>({
               result: result.result,
               board: result.board,
             })
+
+            // =============================================================
+            // Procesar ranking después de la partida (modo ranked)
+            // =============================================================
+            try {
+              const completedGame = await getGame(gameId)
+              if (completedGame && completedGame.mode === 'ranked' && completedGame.userId) {
+                const playerPieces = completedGame.board
+                  .flat()
+                  .filter((v: number) => v === 1 || v === 3).length
+                const aiPieces = completedGame.board
+                  .flat()
+                  .filter((v: number) => v === 2 || v === 4).length
+
+                const rankingResult = await updateRankingAfterGame(
+                  completedGame.userId,
+                  {
+                    won: completedGame.result === 'victory',
+                    difficulty: completedGame.difficulty,
+                    playerPiecesLeft: playerPieces,
+                    aiPiecesLeft: aiPieces,
+                    totalMoves: completedGame.totalMoves,
+                    durationSeconds: completedGame.duration || 0,
+                    mode: 'ranked',
+                  }
+                )
+
+                if (rankingResult) {
+                  // Guardar puntos en el documento de la partida
+                  const { getDatabase } = await import('./database/Database')
+                  const gCol = getDatabase().getCollection('games')
+                  await gCol.updateOne(
+                    { _id: completedGame._id },
+                    { $set: { pointsEarned: rankingResult.pointsEarned } }
+                  )
+
+                  // Notificar al frontend los puntos ganados/perdidos
+                  broadcastToGame(gameId, {
+                    type: 'ranking_update',
+                    pointsEarned: rankingResult.pointsEarned,
+                    leagueBefore: rankingResult.leagueBefore,
+                    leagueAfter: rankingResult.leagueAfter,
+                    won: rankingResult.won,
+                    streak: rankingResult.streak,
+                    totalPoints: rankingResult.totalPoints,
+                  })
+                }
+              }
+            } catch (rankErr) {
+              console.error('Error processing ranking:', rankErr)
+            }
           }
         }
       } catch (error) {

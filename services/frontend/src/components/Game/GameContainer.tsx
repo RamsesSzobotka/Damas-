@@ -21,17 +21,43 @@ const COLORS = {
 
 interface Props {
   difficulty: string
+  routeMode?: 'ranked' | 'practice'
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-export default function GameContainer({ difficulty }: Props) {
+/** Colores por liga */
+const LEAGUE_COLORS: Record<string, string> = {
+  Principiante: '#67E8F9',
+  Intermedio: '#C026D3',
+  Master: '#FFD700',
+  'Elite Cósmica': '#FF4500',
+}
+
+const LEAGUE_ICONS: Record<string, string> = {
+  Principiante: '🌌',
+  Intermedio: '⚡',
+  Master: '🧠',
+  'Elite Cósmica': '👾',
+}
+
+export default function GameContainer({ difficulty, routeMode = 'practice' }: Props) {
   const navigate = useNavigate()
   const { isSignedIn } = useUser()
   const { getToken } = useAuth()
   const reset = useGameStore((s) => s.reset)
   const [playerSkinColor, setPlayerSkinColor] = useState<string | undefined>()
   const [playerSecondaryColor, setPlayerSecondaryColor] = useState<string | undefined>()
+  const [playerLeague, setPlayerLeague] = useState<string | null>(null)
+  const [playerPoints, setPlayerPoints] = useState<number>(0)
+
+  // Modo: viene del search param (routeMode). Ranked solo si autenticado.
+  const mode = routeMode === 'ranked' && isSignedIn ? 'ranked' : 'practice'
+
+  const getAuthToken = useMemo(
+    () => isSignedIn ? async () => { try { return await getToken() } catch { return null } } : undefined,
+    [isSignedIn, getToken],
+  )
 
   const {
     board,
@@ -45,7 +71,8 @@ export default function GameContainer({ difficulty }: Props) {
     handleSquareClick,
     moveAnimation,
     moveHistory,
-  } = useGame(difficulty)
+    rankingUpdate,
+  } = useGame(difficulty, mode, getAuthToken)
 
   // Fetch equipped skin
   useEffect(() => {
@@ -69,6 +96,24 @@ export default function GameContainer({ difficulty }: Props) {
   }, [isSignedIn, getToken])
 
   // Cleanup on unmount
+  // Fetch player's ranking info if ranked and signed in
+  useEffect(() => {
+    if (!isSignedIn || mode !== 'ranked') return
+    ;(async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch(`${API_BASE}/api/rankings/position`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPlayerLeague(data.league.name)
+          setPlayerPoints(data.totalPoints)
+        }
+      } catch {}
+    })()
+  }, [isSignedIn, mode, getToken])
+
   useEffect(() => {
     return () => {
       reset()
@@ -77,7 +122,7 @@ export default function GameContainer({ difficulty }: Props) {
 
   const handleBack = () => {
     reset()
-    navigate({ to: '/game/difficulty' })
+    navigate({ to: '/' })
   }
 
   const handlePlayAgain = () => {
@@ -314,6 +359,11 @@ export default function GameContainer({ difficulty }: Props) {
               CONTROL
             </p>
             <div style={{ display: 'grid', gap: '8px', color: COLORS.textSpace, fontFamily: 'VT323, monospace', fontSize: '15px' }}>
+              {playerLeague && mode === 'ranked' && (
+                <p style={{ color: LEAGUE_COLORS[playerLeague] || COLORS.cyan }}>
+                  {LEAGUE_ICONS[playerLeague] || ''} {playerLeague} · {playerPoints} pts
+                </p>
+              )}
               <p>IA: {difficulty}</p>
               <p>Tiempo: {formatTime(elapsed)}</p>
               <p>Jugador: {pieceCounts.player}</p>
@@ -437,6 +487,7 @@ export default function GameContainer({ difficulty }: Props) {
               padding: '32px',
               textAlign: 'center',
               boxShadow: `0 0 20px rgba(192, 38, 211, 0.5)`,
+              maxWidth: '420px',
             }}
           >
             <p
@@ -445,11 +496,63 @@ export default function GameContainer({ difficulty }: Props) {
                 color: COLORS.gold,
                 fontSize: '16px',
                 textShadow: `0 0 8px ${COLORS.gold}`,
-                marginBottom: '20px',
+                marginBottom: '16px',
               }}
             >
-              {result}
+              {result === 'victory' ? 'VICTORIA' : result === 'defeat' ? 'DERROTA' : result}
             </p>
+
+            {/* Ranking result */}
+            {rankingUpdate && (
+              <div
+                style={{
+                  backgroundColor: 'rgba(11, 13, 43, 0.8)',
+                  border: `1px solid ${rankingUpdate.pointsEarned > 0 ? COLORS.cyan : COLORS.magenta}`,
+                  padding: '14px',
+                  marginBottom: '20px',
+                }}
+              >
+                <p style={{ fontFamily: 'VT323, monospace', color: rankingUpdate.pointsEarned > 0 ? COLORS.cyan : COLORS.magenta, fontSize: '24px' }}>
+                  {rankingUpdate.pointsEarned > 0 ? '+' : ''}{rankingUpdate.pointsEarned} pts
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '8px', fontFamily: 'VT323, monospace', fontSize: '16px' }}>
+                  <span>
+                    <span style={{ color: COLORS.textSpace }}>Liga: </span>
+                    <span style={{ color: LEAGUE_COLORS[rankingUpdate.leagueBefore] || COLORS.cyan }}>
+                      {rankingUpdate.leagueBefore}
+                    </span>
+                    {rankingUpdate.leagueBefore !== rankingUpdate.leagueAfter && (
+                      <>
+                        <span style={{ color: COLORS.textSpace }}> → </span>
+                        <span style={{ color: LEAGUE_COLORS[rankingUpdate.leagueAfter] || COLORS.gold, textShadow: `0 0 6px ${COLORS.gold}` }}>
+                          {rankingUpdate.leagueAfter}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </div>
+                <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px', marginTop: '6px' }}>
+                  Total: {rankingUpdate.totalPoints} pts · Racha: {rankingUpdate.streak}
+                </p>
+              </div>
+            )}
+
+            {/* Time and moves summary */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '20px',
+                marginBottom: '20px',
+                fontFamily: 'VT323, monospace',
+                fontSize: '15px',
+                color: COLORS.textSpace,
+              }}
+            >
+              <span>Tiempo: {formatTime(elapsed)}</span>
+              <span>Movimientos: {moveHistory.length}</span>
+            </div>
+
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handlePlayAgain}

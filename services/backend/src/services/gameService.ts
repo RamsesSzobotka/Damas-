@@ -176,18 +176,26 @@ function applyMoveToBoard(
  * Crea una nueva partida con tablero inicial y dificultad especificada.
  * @param difficulty - Dificultad de la partida
  * @param playerSkinId - ID de la skin equipada del jugador (opcional)
+ * @param mode - Modo de juego: 'ranked' o 'practice'
+ * @param userId - ID del usuario en MongoDB (requerido para ranked)
+ * @param leagueAtPlay - Liga del jugador al iniciar (solo ranked)
  * @returns gameId y tablero inicial
  */
 export async function createGame(
   difficulty: string,
-  playerSkinId?: string
+  playerSkinId?: string,
+  mode: 'ranked' | 'practice' = 'practice',
+  userId?: string,
+  leagueAtPlay?: string
 ): Promise<{ gameId: string; board: number[][] }> {
   const board = createInitialBoard()
 
   const game: Record<string, unknown> = {
     _id: new ObjectId(),
-    userId: new ObjectId(), // Placeholder para partidas anónimas (V1)
+    userId: userId ? new ObjectId(userId) : new ObjectId(), // Placeholder si no hay auth
     difficulty,
+    mode,
+    leagueAtPlay,
     status: 'active' as const,
     currentPlayer: 1,
     board,
@@ -385,6 +393,7 @@ export async function handlePlayerMove(
       $set.status = 'completed'
       $set.result = gameOverCheck.winner === 'player' ? 'victory' : 'defeat'
       $set.completedAt = new Date()
+      $set.duration = Math.floor((Date.now() - game.createdAt.getTime()) / 1000)
     }
 
     await collection.updateOne(
@@ -415,6 +424,7 @@ export async function handlePlayerMove(
       status: 'completed',
       result: gameOverAfterPlayer.winner === 'player' ? 'victory' : 'defeat',
       completedAt: new Date(),
+      duration: Math.floor((Date.now() - game.createdAt.getTime()) / 1000),
     }
 
     await collection.updateOne(
@@ -447,6 +457,7 @@ export async function handlePlayerMove(
       status: 'completed',
       result: 'victory',
       completedAt: new Date(),
+      duration: Math.floor((Date.now() - game.createdAt.getTime()) / 1000),
     }
 
     await collection.updateOne(
@@ -531,6 +542,7 @@ export async function handlePlayerMove(
     $set.status = 'completed'
     $set.result = result
     $set.completedAt = new Date()
+    $set.duration = Math.floor((Date.now() - game.createdAt.getTime()) / 1000)
   }
 
   await collection.updateOne(

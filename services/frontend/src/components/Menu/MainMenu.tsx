@@ -24,12 +24,13 @@ const pixelFont = {
 interface MenuItem {
   icon: string
   label: string
-  action: 'play' | 'rankings' | 'shop' | 'customize'
+  action: 'retos' | 'quickplay' | 'rankings' | 'shop' | 'customize'
   description?: string
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { icon: '▶', label: 'JUGAR', action: 'play', description: 'Nueva partida vs IA' },
+  { icon: '▶', label: 'JUGAR', action: 'quickplay', description: 'Partida ranked vs IA' },
+  { icon: '🏆', label: 'RETOS', action: 'retos', description: 'Práctica: elige dificultad vs IA' },
   { icon: '📊', label: 'RANKINGS', action: 'rankings', description: 'Tabla de puntuaciones' },
   { icon: '🛍️', label: 'TIENDA', action: 'shop', description: 'Comprar skins' },
   { icon: '🎨', label: 'PERSONALIZAR', action: 'customize', description: 'Fichas, tablero y animaciones' },
@@ -301,21 +302,30 @@ function AuthSection() {
 
 export default function MainMenu() {
   const navigate = useNavigate()
+  const { isSignedIn } = useUser()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleMenuAction = async (action: MenuItem['action']) => {
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 200))
 
-    const routes: Record<MenuItem['action'], string> = {
-      play: '/game/difficulty',
-      rankings: '/rankings',
-      shop: '/shop',
-      customize: '/customize',
-    }
-
     try {
-      await navigate({ to: routes[action] })
+      if (action === 'quickplay') {
+        // JUGAR (ranked): requiere auth. Si no autenticado, redirigir a RETOS
+        if (!isSignedIn) {
+          await navigate({ to: '/game/difficulty' })
+        } else {
+          await navigate({ to: '/game/play', search: { difficulty: 'principiante', mode: 'ranked' } })
+        }
+      } else {
+        const routes: Record<Exclude<MenuItem['action'], 'quickplay'>, string> = {
+          retos: '/game/difficulty',
+          rankings: '/rankings',
+          shop: '/shop',
+          customize: '/customize',
+        }
+        await navigate({ to: routes[action] })
+      }
     } catch (error) {
       console.error('Navigation failed:', error)
       setIsLoading(false)

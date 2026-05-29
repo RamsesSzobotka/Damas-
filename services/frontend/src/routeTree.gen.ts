@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
+import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as CustomizeIndexRouteImport } from './routes/customize/index'
 import { Route as GamePlayRouteImport } from './routes/game/play'
 import { Route as GameDifficultyRouteImport } from './routes/game/difficulty'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const ShopIndexRoute = ShopIndexRouteImport.update({
   id: '/shop/',
   path: '/shop/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingsIndexRoute = RankingsIndexRouteImport.update({
+  id: '/rankings/',
+  path: '/rankings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomizeIndexRoute = CustomizeIndexRouteImport.update({
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
   '/customize/': typeof CustomizeIndexRoute
+  '/rankings/': typeof RankingsIndexRoute
   '/shop/': typeof ShopIndexRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
   '/customize': typeof CustomizeIndexRoute
+  '/rankings': typeof RankingsIndexRoute
   '/shop': typeof ShopIndexRoute
 }
 export interface FileRoutesById {
@@ -61,19 +69,33 @@ export interface FileRoutesById {
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
   '/customize/': typeof CustomizeIndexRoute
+  '/rankings/': typeof RankingsIndexRoute
   '/shop/': typeof ShopIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game/difficulty' | '/game/play' | '/customize/' | '/shop/'
+  fullPaths:
+    | '/'
+    | '/game/difficulty'
+    | '/game/play'
+    | '/customize/'
+    | '/rankings/'
+    | '/shop/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game/difficulty' | '/game/play' | '/customize' | '/shop'
+  to:
+    | '/'
+    | '/game/difficulty'
+    | '/game/play'
+    | '/customize'
+    | '/rankings'
+    | '/shop'
   id:
     | '__root__'
     | '/'
     | '/game/difficulty'
     | '/game/play'
     | '/customize/'
+    | '/rankings/'
     | '/shop/'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +104,7 @@ export interface RootRouteChildren {
   GameDifficultyRoute: typeof GameDifficultyRoute
   GamePlayRoute: typeof GamePlayRoute
   CustomizeIndexRoute: typeof CustomizeIndexRoute
+  RankingsIndexRoute: typeof RankingsIndexRoute
   ShopIndexRoute: typeof ShopIndexRoute
 }
 
@@ -99,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop/'
       preLoaderRoute: typeof ShopIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rankings/': {
+      id: '/rankings/'
+      path: '/rankings'
+      fullPath: '/rankings/'
+      preLoaderRoute: typeof RankingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customize/': {
@@ -130,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   GameDifficultyRoute: GameDifficultyRoute,
   GamePlayRoute: GamePlayRoute,
   CustomizeIndexRoute: CustomizeIndexRoute,
+  RankingsIndexRoute: RankingsIndexRoute,
   ShopIndexRoute: ShopIndexRoute,
 }
 export const routeTree = rootRouteImport

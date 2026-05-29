@@ -36,7 +36,13 @@ export const GameSchema = z.object({
   updatedAt: z.date().default(() => new Date()),
   completedAt: z.date().optional(),
   
-  // Puntuación
+  // Modo de juego: ranked (afecta ranking) o practice (no afecta)
+  mode: z.enum(['ranked', 'practice']).default('practice'),
+  
+  // Liga del jugador al iniciar la partida (solo ranked)
+  leagueAtPlay: z.string().optional(),
+  
+  // Puntuación ganada/perdida
   pointsEarned: z.number().optional(),
   
   // Skins usados

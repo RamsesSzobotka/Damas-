@@ -13,6 +13,7 @@ import { createGame, getGame } from '@/services/gameService'
 import { getDatabase } from '@/database/Database'
 import { USER_COLLECTION } from '@/models/User'
 import { USER_SKIN_COLLECTION } from '@/models/UserSkin'
+import { getDifficultyForPoints, getLeagueForPoints } from '@/services/rankingService'
 
 // ---------------------------------------------------------------------------
 // WebSocket Connection Management
@@ -96,8 +97,14 @@ const gameRoutes = new Hono()
 
 /**
  * POST /api/game/create
- * Crea una nueva partida con la dificultad especificada.
- * Body: { difficulty: "beginner" | "intermediate" | "master" | "ultra" }
+ * Crea una nueva partida.
+ * Body: {
+ *   mode: "ranked" | "practice" (default: "practice")
+ *   difficulty?: "beginner" | "intermediate" | "master" | "ultra" (opcional en ranked, se auto-asigna)
+ * }
+ *
+ * - En modo "ranked": requiere auth, la dificultad se auto-asigna según la liga
+ * - En modo "practice": difficulty es obligatorio, sin auth requerido
  */
 // Map Spanish difficulty names to English (DB format)
 const DIFFICULTY_MAP: Record<string, string> = {
@@ -111,28 +118,32 @@ const DIFFICULTY_MAP: Record<string, string> = {
 
 gameRoutes.post('/api/game/create', async (c) => {
   try {
-    const { difficulty } = await c.req.json()
+    const body = await c.req.json()
+    const mode: string = body.mode || 'practice'
+    let difficulty: string = body.difficulty || ''
+    let leagueAtPlay: string | undefined
+    let userId: string | undefined
 
-    if (!difficulty) {
-      return c.json({ error: 'Missing difficulty' }, 400)
+    // Validar modo
+    if (mode !== 'ranked' && mode !== 'practice') {
+      return c.json({ error: 'Invalid mode. Use "ranked" or "practice"' }, 400)
     }
 
-    const mappedDifficulty = DIFFICULTY_MAP[difficulty.toLowerCase()]
-    if (!mappedDifficulty) {
-      return c.json({ error: 'Invalid difficulty' }, 400)
-    }
-
-    // Resolver skin equipada del usuario si está autenticado
+    // Resolver auth
     let playerSkinId: string | undefined
+    let userClerkId: string | undefined
     const authHeader = c.req.header('Authorization')
+
     if (authHeader?.startsWith('Bearer ')) {
       try {
         const payload = await verifyToken(authHeader.slice(7), {
           secretKey: process.env.CLERK_SECRET_KEY || '',
         })
+        userClerkId = payload.sub
         const users = getDatabase().getCollection(USER_COLLECTION)
         const user = await users.findOne({ clerkId: payload.sub })
         if (user) {
+          userId = user._id!.toHexString()
           const userSkinsCol = getDatabase().getCollection(USER_SKIN_COLLECTION)
           const equipped = await userSkinsCol.findOne({ userId: user._id, isEquipped: true })
           if (equipped) {
@@ -140,12 +151,56 @@ gameRoutes.post('/api/game/create', async (c) => {
           }
         }
       } catch {
-        // Token inválido — se crea partida sin skin
+        // Token inválido
       }
     }
 
-    const result = await createGame(mappedDifficulty, playerSkinId)
-    return c.json({ ...result, playerSkinId }, 201)
+    if (mode === 'ranked') {
+      // =============================================================
+      // MODO RANKED: requiere auth, auto-dificultad según liga
+      // =============================================================
+      if (!userId) {
+        return c.json({ error: 'Ranked mode requires authentication' }, 401)
+      }
+
+      // Obtener puntos del usuario (del ranking o de stats)
+      const users = getDatabase().getCollection(USER_COLLECTION)
+      const user = await users.findOne({ _id: new ObjectId(userId) })
+      const playerPoints = user?.stats?.totalPoints || 0
+
+      // Auto-asignar dificultad según liga
+      const autoDifficulty = getDifficultyForPoints(playerPoints)
+      difficulty = autoDifficulty
+
+      // Registrar en qué liga está el jugador
+      const league = getLeagueForPoints(playerPoints)
+      leagueAtPlay = league.name
+
+      console.log(`🏆 Partida RANKED: usuario ${userClerkId} - Liga ${leagueAtPlay} (${autoDifficulty}), ${playerPoints} pts`)
+    } else {
+      // =============================================================
+      // MODO PRACTICE: difficulty obligatorio
+      // =============================================================
+      if (!difficulty) {
+        return c.json({ error: 'Missing difficulty for practice mode' }, 400)
+      }
+
+      const mappedDifficulty = DIFFICULTY_MAP[difficulty.toLowerCase()]
+      if (!mappedDifficulty) {
+        return c.json({ error: 'Invalid difficulty' }, 400)
+      }
+      difficulty = mappedDifficulty
+    }
+
+    const result = await createGame(difficulty, playerSkinId, mode as 'ranked' | 'practice', userId, leagueAtPlay)
+
+    return c.json({
+      ...result,
+      mode,
+      difficulty,
+      leagueAtPlay,
+      playerSkinId,
+    }, 201)
   } catch (error) {
     console.error('Error creating game:', error)
     return c.json({ error: 'Failed to create game' }, 500)

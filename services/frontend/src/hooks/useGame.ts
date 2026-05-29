@@ -34,7 +34,16 @@ const clearTimer = (timer: ReturnType<typeof setTimeout> | null): void => {
   }
 }
 
-export function useGame(difficulty: string) {
+export interface RankingUpdate {
+  pointsEarned: number
+  leagueBefore: string
+  leagueAfter: string
+  won: boolean
+  streak: number
+  totalPoints: number
+}
+
+export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'practice', getAuthToken?: () => Promise<string | null>) {
   const initialState = useGameStore.getState()
 
   const [gameId, setGameIdLocal] = useState(initialState.gameId)
@@ -50,6 +59,7 @@ export function useGame(difficulty: string) {
   const [moveHistory, setMoveHistory] = useState<
     Array<{ player: 'player' | 'ai'; from: [number, number]; to: [number, number] }>
   >([])
+  const [rankingUpdate, setRankingUpdate] = useState<RankingUpdate | null>(null)
 
   const playerBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const aiBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -201,16 +211,33 @@ export function useGame(difficulty: string) {
       setLoading(true)
       setError(null)
       setDifficulty(difficulty)
+      setRankingUpdate(null)
 
       try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+
+        // Add auth token if available (required for ranked mode)
+        if (getAuthToken) {
+          const token = await getAuthToken()
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+        }
+
+        const body: Record<string, unknown> = { mode }
+        if (mode === 'practice') {
+          body.difficulty = difficulty
+        }
+
         const response = await fetch(`${API_BASE}/api/game/create`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ difficulty }),
+          headers,
+          body: JSON.stringify(body),
         })
 
         if (!response.ok) {
-          throw new Error(`Failed to create game: ${response.statusText}`)
+          const errData = await response.json().catch(() => ({}))
+          throw new Error(errData.error || `Failed to create game: ${response.statusText}`)
         }
 
         const data = await response.json()
@@ -228,6 +255,8 @@ export function useGame(difficulty: string) {
     startGame()
   }, [
     difficulty,
+    mode,
+    getAuthToken,
     setBoard,
     setCurrentPlayer,
     setDifficulty,
@@ -326,6 +355,16 @@ export function useGame(difficulty: string) {
           setForcedPiece(null)
           setSelectedPiece(null)
           break
+        case 'ranking_update':
+          setRankingUpdate({
+            pointsEarned: data.pointsEarned as number,
+            leagueBefore: data.leagueBefore as string,
+            leagueAfter: data.leagueAfter as string,
+            won: data.won as boolean,
+            streak: data.streak as number,
+            totalPoints: data.totalPoints as number,
+          })
+          break
         case 'error':
           setError((data.message as string) || 'An error occurred')
           break
@@ -408,5 +447,7 @@ export function useGame(difficulty: string) {
     handleSquareClick,
     moveAnimation,
     moveHistory,
+    rankingUpdate,
+    mode,
   }
 }
