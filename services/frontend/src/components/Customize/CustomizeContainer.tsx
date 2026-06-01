@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useUser, useAuth } from '@clerk/tanstack-react-start'
 import Stars from '@/components/ui/Stars'
+import { playButtonSound } from '@/utils/playButtonSound'
 import bgImage from '@/assets/background/back1.png'
 
 const COLORS = {
@@ -78,6 +79,7 @@ export default function CustomizeContainer() {
   }, [isSignedIn, getToken])
 
   async function handleEquip(skinId: string, equipType?: string) {
+    playButtonSound()
     setEquipping(skinId)
     setMessage(null)
     try {
@@ -150,7 +152,7 @@ export default function CustomizeContainer() {
           }}
         >
           <button
-            onClick={() => navigate({ to: '/' })}
+            onClick={() => { playButtonSound(); navigate({ to: '/' }) }}
             className="flex items-center gap-2 transition-all duration-200 mb-6"
             style={{
               color: COLORS.cyan,
@@ -215,7 +217,7 @@ export default function CustomizeContainer() {
               {/* Tabs */}
               <div className="flex justify-center gap-4 mb-8">
                 <button
-                  onClick={() => setActiveTab('pieces')}
+                  onClick={() => { playButtonSound(); setActiveTab('pieces') }}
                   style={{
                     padding: '10px 24px',
                     fontSize: '14px',
@@ -232,7 +234,7 @@ export default function CustomizeContainer() {
                   FICHAS
                 </button>
                 <button
-                  onClick={() => setActiveTab('boards')}
+                  onClick={() => { playButtonSound(); setActiveTab('boards') }}
                   style={{
                     padding: '10px 24px',
                     fontSize: '14px',

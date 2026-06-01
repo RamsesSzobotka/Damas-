@@ -8,6 +8,7 @@ import { useGameStore } from '@/stores/gameStore'
 import GameBoard from '@/components/Game/GameBoard'
 import Stars from '@/components/ui/Stars'
 import bgImage from '@/assets/background/backPlay.png'
+import { playButtonSound } from '@/utils/playButtonSound'
 
 const COLORS = {
   spaceDark: '#0B0D2B',
@@ -132,11 +133,13 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
   }, [reset])
 
   const handleBack = () => {
+    playButtonSound()
     reset()
     navigate({ to: '/' })
   }
 
   const handlePlayAgain = () => {
+    playButtonSound()
     reset()
     // Use window.location to force a full remount
     navigate({ to: '/game/play', search: { difficulty } })

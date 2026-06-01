@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import bgImage from '@/assets/background/backPlay.png'
 import Stars from '@/components/ui/Stars'
+import { playButtonSound } from '@/utils/playButtonSound'
 
 const COLORS = {
   spaceDark: '#0B0D2B',
@@ -67,7 +68,7 @@ function DifficultyButton({ icon, label, description, onClick, isActive, index }
       }}
     >
       <button
-        onClick={onClick}
+        onClick={() => { playButtonSound(); onClick() }}
         onMouseDown={() => setIsPressed(true)}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => {
@@ -194,6 +195,7 @@ export default function DifficultySelect() {
   }
 
   const handleBack = () => {
+    playButtonSound()
     navigate({ to: '/' })
   }
 

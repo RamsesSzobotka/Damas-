@@ -5,6 +5,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useUser, useAuth, SignInButton, UserButton } from '@clerk/tanstack-react-start'
 import bgImage from '@/assets/background/back1.png'
 import Stars from '@/components/ui/Stars'
+import { playButtonSound } from '@/utils/playButtonSound'
 
 const COLORS = {
   spaceDark: '#0B0D2B',
@@ -66,7 +67,7 @@ function CosmicButton({ icon, label, description, onClick, isActive, index = 0, 
       }}
     >
     <button
-      onClick={onClick}
+      onClick={() => { playButtonSound(); onClick() }}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onMouseLeave={() => {
@@ -410,7 +411,7 @@ function JugarSubmenu({
         ))}
 
         <button
-          onClick={handleClose}
+          onClick={() => { playButtonSound(); handleClose() }}
           aria-label="Volver al menú principal"
           style={{
             marginTop: '12px',

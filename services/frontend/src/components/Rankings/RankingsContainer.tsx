@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useUser, useAuth } from '@clerk/tanstack-react-start'
 import Stars from '@/components/ui/Stars'
+import { playButtonSound } from '@/utils/playButtonSound'
 import bgImage from '@/assets/background/back1.png'
 
 const COLORS = {
@@ -127,7 +128,10 @@ export default function RankingsContainer() {
     })()
   }, [fetchRankings, fetchMyStats])
 
-  const handleBack = () => navigate({ to: '/' })
+  const handleBack = () => {
+    playButtonSound()
+    navigate({ to: '/' })
+  }
 
   const filteredRankings = filter === 'all'
     ? rankings
@@ -261,7 +265,7 @@ export default function RankingsContainer() {
           {['all', 'Plutón', 'Nebulosa', 'Quásar', 'Elite Cósmica'].map((l) => (
             <button
               key={l}
-              onClick={() => setFilter(l)}
+              onClick={() => { playButtonSound(); setFilter(l) }}
               style={{
                 backgroundColor: filter === l ? 'rgba(103, 232, 249, 0.15)' : 'transparent',
                 border: 'none',

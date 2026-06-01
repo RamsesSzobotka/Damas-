@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useUser, useAuth, SignInButton } from '@clerk/tanstack-react-start'
 import Stars from '@/components/ui/Stars'
+import { playButtonSound } from '@/utils/playButtonSound'
 import bgImage from '@/assets/background/backStore.png'
 
 const COLORS = {
@@ -354,6 +355,7 @@ export default function ShopContainer() {
   }
 
   async function handleBuy(skinId: string) {
+    playButtonSound()
     if (!isLoaded || !isSignedIn) return
 
     setPurchasing(true)
@@ -419,7 +421,7 @@ export default function ShopContainer() {
           }}
         >
           <button
-            onClick={() => navigate({ to: '/' })}
+            onClick={() => { playButtonSound(); navigate({ to: '/' }) }}
             className="flex items-center gap-2 transition-all duration-200 mb-6"
             style={{
               color: COLORS.cyan,
@@ -481,7 +483,7 @@ export default function ShopContainer() {
               {FILTER_OPTIONS.map(opt => (
                 <button
                   key={opt.key}
-                  onClick={() => setFilterType(opt.key)}
+                  onClick={() => { playButtonSound(); setFilterType(opt.key) }}
                   style={{
                     padding: '8px 16px',
                     fontSize: '12px',
@@ -507,7 +509,7 @@ export default function ShopContainer() {
               {SORT_OPTIONS.map(opt => (
                 <button
                   key={opt.key}
-                  onClick={() => setSortMode(opt.key)}
+                  onClick={() => { playButtonSound(); setSortMode(opt.key) }}
                   style={{
                     padding: '6px 12px',
                     fontSize: '11px',
