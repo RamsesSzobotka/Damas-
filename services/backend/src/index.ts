@@ -142,7 +142,7 @@ const server = Bun.serve<{ gameId: string }>({
           // Notificar a todos los clientes de la partida
           broadcastToGame(gameId, {
             type: 'move_applied',
-            board: result.board,
+            board: result.boardAfterPlayerMove || result.board,
             lastMove: result.lastMove,
             nextPlayer: result.nextPlayer,
             forcedPiece: result.forcedPiece,

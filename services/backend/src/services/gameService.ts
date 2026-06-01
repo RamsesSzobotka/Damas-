@@ -248,6 +248,7 @@ export async function handlePlayerMove(
   to: [number, number]
 ): Promise<{
   board: number[][]
+  boardAfterPlayerMove?: number[][]
   lastMove: { from: [number, number]; to: [number, number]; player: string }
   gameOver?: boolean
   result?: string
@@ -281,6 +282,7 @@ export async function handlePlayerMove(
     to,
     captured ? [captured] : []
   )
+  const boardAfterPlayerMove = currentBoard.map(row => [...row])
   const pieceAfterMove = currentBoard[to[0]][to[1]]
 
   const canContinueCapture = (board: number[][], row: number, col: number): boolean => {
@@ -556,6 +558,7 @@ export async function handlePlayerMove(
 
   return {
     board: currentBoard,
+    boardAfterPlayerMove: aiMoveResult ? boardAfterPlayerMove : undefined,
     lastMove: { from, to, player: 'player' },
     gameOver,
     result,
