@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic'
 import GameContainer from '@/components/Game/GameContainer'
 
 export interface PlaySearch {
@@ -16,5 +17,6 @@ export const Route = createFileRoute('/game/play')({
 
 function PlayPage() {
   const { difficulty, mode } = Route.useSearch()
+  useBackgroundMusic(true, 'boss')
   return <GameContainer difficulty={difficulty ?? 'principiante'} routeMode={mode ?? 'practice'} />
 }

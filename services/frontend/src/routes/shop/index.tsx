@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic'
 import ShopContainer from '@/components/Shop/ShopContainer'
 
 export const Route = createFileRoute('/shop/')({
@@ -6,5 +7,6 @@ export const Route = createFileRoute('/shop/')({
 })
 
 function ShopPage() {
+  useBackgroundMusic(true, 'shop')
   return <ShopContainer />
 }
