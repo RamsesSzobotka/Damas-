@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { calculateValidMoves, applyPreviewMove } from '@/utils/checkersMoves'
-import { playSoundForMove } from '@/utils/playGameSound'
+import { playSoundForMove, playKingSound } from '@/utils/playGameSound'
 
 const API_BASE = 'http://localhost:3001'
 
@@ -135,6 +135,14 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
 
     // Play sound in sync with the visual animation
     playSoundForMove(nextMove.animation.from, nextMove.animation.to)
+
+    // Detect king promotion: player piece (1) reaches row 0 or AI piece (2) reaches row 7
+    const { piece: movingPiece, to: dest, actor } = nextMove.animation
+    const isKingPromotion =
+      (movingPiece === 1 && dest[0] === 0) || (movingPiece === 2 && dest[0] === 7)
+    if (isKingPromotion) {
+      playKingSound()
+    }
 
     // Wait for the animation to finish
     // THEN update the board so the piece doesn't jump while animating

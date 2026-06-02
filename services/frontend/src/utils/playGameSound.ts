@@ -1,8 +1,10 @@
 import moveSoundSrc from '@/assets/sounds/moveSound.mp3'
 import eatSoundSrc from '@/assets/sounds/eatSound.mp3'
+import kingSoundSrc from '@/assets/sounds/king.mp3'
 
 const MOVE_VOLUME = 0.3
 const EAT_VOLUME = 0.6
+const KING_VOLUME = 0.5
 
 export function playMoveSound() {
   try {
@@ -20,6 +22,18 @@ export function playEatSound() {
   try {
     const audio = new Audio(eatSoundSrc)
     audio.volume = EAT_VOLUME
+    audio.play().catch(() => {
+      // Browser autoplay policy or temporary issue — silent fail
+    })
+  } catch {
+    // Audio not supported
+  }
+}
+
+export function playKingSound() {
+  try {
+    const audio = new Audio(kingSoundSrc)
+    audio.volume = KING_VOLUME
     audio.play().catch(() => {
       // Browser autoplay policy or temporary issue — silent fail
     })
