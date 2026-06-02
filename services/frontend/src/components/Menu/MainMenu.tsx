@@ -448,7 +448,6 @@ export default function MainMenu() {
   const { isSignedIn } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [showSubmenu, setShowSubmenu] = useState(false)
-
   const handleMenuAction = async (action: MenuItem['action']) => {
     if (action === 'jugar') {
       setShowSubmenu(true)

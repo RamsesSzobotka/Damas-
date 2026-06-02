@@ -26,6 +26,11 @@
   50% { transform: translateY(-8px); }
 }
 
+@keyframes slideDown {
+  0% { transform: translateY(-80px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes piece-move {
   0% {
     transform: translate(0, 0) scale(1);

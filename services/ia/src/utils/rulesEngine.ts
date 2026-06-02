@@ -102,10 +102,12 @@ export function getCaptures(board: Board, row: number, col: number): Move[] {
 
         if (chain.length > 0) {
           for (const c of chain) {
+            const chainPath = c.path || [c.from, c.to]
             results.push({
               from: [row, col],
               to: c.to,
               captured: [[enemyRow, enemyCol], ...(c.captured || [])],
+              path: [[row, col], [scanRow, scanCol], ...chainPath.slice(1)],
             })
           }
         } else {
@@ -113,6 +115,7 @@ export function getCaptures(board: Board, row: number, col: number): Move[] {
             from: [row, col],
             to: [scanRow, scanCol],
             captured: [[enemyRow, enemyCol]],
+            path: [[row, col], [scanRow, scanCol]],
           })
         }
       }
@@ -137,10 +140,12 @@ export function getCaptures(board: Board, row: number, col: number): Move[] {
 
       if (chain.length > 0) {
         for (const c of chain) {
+          const chainPath = c.path || [c.from, c.to]
           results.push({
             from: [row, col],
             to: c.to,
             captured: [[enemyRow, enemyCol], ...(c.captured || [])],
+            path: [[row, col], [landRow, landCol], ...chainPath.slice(1)],
           })
         }
       } else {
@@ -148,6 +153,7 @@ export function getCaptures(board: Board, row: number, col: number): Move[] {
           from: [row, col],
           to: [landRow, landCol],
           captured: [[enemyRow, enemyCol]],
+          path: [[row, col], [landRow, landCol]],
         })
       }
     }

@@ -75,6 +75,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     moveAnimation,
     moveHistory,
     rankingUpdate,
+    surrender,
   } = useGame(difficulty, mode, getAuthToken)
 
   // Fetch equipped skin and board
@@ -132,17 +133,15 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     }
   }, [reset])
 
+  const handleSurrender = async () => {
+    playButtonSound()
+    await surrender()
+  }
+
   const handleBack = () => {
     playButtonSound()
     reset()
     navigate({ to: '/' })
-  }
-
-  const handlePlayAgain = () => {
-    playButtonSound()
-    reset()
-    // Use window.location to force a full remount
-    navigate({ to: '/game/play', search: { difficulty } })
   }
 
   const pieceCounts = useMemo(() => {
@@ -163,6 +162,21 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
 
   const [elapsed, setElapsed] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const [showGameOver, setShowGameOver] = useState(false)
+  const gameOverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (status === 'gameOver') {
+      if (timerRef.current) clearInterval(timerRef.current)
+      gameOverTimerRef.current = setTimeout(() => setShowGameOver(true), 1500)
+      return () => {
+        if (gameOverTimerRef.current) clearTimeout(gameOverTimerRef.current)
+      }
+    } else {
+      setShowGameOver(false)
+    }
+  }, [status])
 
   useEffect(() => {
     if (status === 'gameOver') {
@@ -385,7 +399,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
             </div>
             <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
               <button
-                onClick={handleBack}
+                onClick={handleSurrender}
                 style={{
                   backgroundColor: COLORS.magenta,
                   border: `1px solid ${COLORS.cyan}`,
@@ -399,22 +413,6 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
                 }}
               >
                 Rendirse
-              </button>
-              <button
-                onClick={handlePlayAgain}
-                style={{
-                  backgroundColor: COLORS.spacePanel,
-                  border: `1px solid ${COLORS.gold}`,
-                  color: COLORS.gold,
-                  padding: '8px 10px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  cursor: 'pointer',
-                }}
-              >
-                Reiniciar
               </button>
             </div>
           </aside>
@@ -494,24 +492,33 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
       </main>
 
       {/* Game over overlay */}
-      {status === 'gameOver' && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60">
+      {showGameOver && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center"
+          style={{
+            backgroundColor: result === 'victory' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.7)',
+          }}
+        >
           <div
             style={{
               backgroundColor: COLORS.spacePanel,
-              border: `2px solid ${COLORS.magenta}`,
+              border: `2px solid ${result === 'victory' ? COLORS.gold : '#2A2A3E'}`,
               padding: '32px',
               textAlign: 'center',
-              boxShadow: `0 0 20px rgba(192, 38, 211, 0.5)`,
+              boxShadow: result === 'victory'
+                ? `0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.2)`
+                : `0 0 20px rgba(0, 0, 0, 0.6)`,
               maxWidth: '420px',
+              animation: 'slideDown 0.5s ease-out',
             }}
           >
             <p
               style={{
                 fontFamily: '"Press Start 2P", monospace',
-                color: COLORS.gold,
+                color: result === 'victory' ? COLORS.gold : COLORS.magenta,
                 fontSize: '16px',
-                textShadow: `0 0 8px ${COLORS.gold}`,
+                textShadow: result === 'victory'
+                  ? `0 0 12px ${COLORS.gold}, 0 0 24px rgba(255, 215, 0, 0.4)`
+                  : `0 0 8px ${COLORS.magenta}`,
                 marginBottom: '16px',
               }}
             >
@@ -569,36 +576,22 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
               <span>Movimientos: {moveHistory.length}</span>
             </div>
 
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={handlePlayAgain}
-                style={{
-                  backgroundColor: COLORS.magenta,
-                  border: `2px solid ${COLORS.cyan}`,
-                  color: COLORS.textWhite,
-                  padding: '10px 24px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.15em',
-                  cursor: 'pointer',
-                  boxShadow: `0 0 12px ${COLORS.magenta}`,
-                }}
-              >
-                JUGAR DE NUEVO
-              </button>
+            <div className="flex justify-center" style={{ animation: 'float 3s ease-in-out infinite' }}>
               <button
                 onClick={handleBack}
                 style={{
                   backgroundColor: COLORS.spacePanel,
-                  border: `2px solid ${COLORS.magenta}`,
-                  color: COLORS.cyan,
+                  border: `2px solid ${result === 'victory' ? COLORS.gold : '#2A2A3E'}`,
+                  color: result === 'victory' ? COLORS.gold : COLORS.textSpace,
                   padding: '10px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
                   letterSpacing: '0.15em',
                   cursor: 'pointer',
+                  boxShadow: result === 'victory'
+                    ? `0 0 12px rgba(255, 215, 0, 0.3)`
+                    : 'none',
                 }}
               >
                 SALIR

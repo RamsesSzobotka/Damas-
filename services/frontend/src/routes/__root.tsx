@@ -7,6 +7,7 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { ClerkProvider } from '@clerk/tanstack-react-start'
+import iconFavicon from '@/assets/background/icon.jpg'
 import '../styles/globals.css'
 
 export const Route = createRootRoute({
@@ -21,6 +22,12 @@ export const Route = createRootRoute({
       },
       {
         title: 'Damas - Checkers Game',
+      },
+    ],
+    links: [
+      {
+        rel: 'icon',
+        href: iconFavicon,
       },
     ],
   }),

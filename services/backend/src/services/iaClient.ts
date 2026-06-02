@@ -11,6 +11,7 @@ export interface AIMoveResponse {
   from: [number, number]
   to: [number, number]
   captured?: [number, number][]
+  path?: [number, number][]
 }
 
 /**

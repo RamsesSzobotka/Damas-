@@ -3,7 +3,8 @@
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { useWebSocket } from '@/hooks/useWebSocket'
-import { calculateValidMoves } from '@/utils/checkersMoves'
+import { calculateValidMoves, applyPreviewMove } from '@/utils/checkersMoves'
+import { playSoundForMove, playMoveSound, playEatSound } from '@/utils/playGameSound'
 
 const API_BASE = 'http://localhost:3001'
 
@@ -292,6 +293,9 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
             const sourceBoard = useGameStore.getState().board
             const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
+            // Play sound: eat if capture, move otherwise
+            playSoundForMove(from, to)
+
             setMoveHistory((previous) => [
               ...previous,
               { player: 'player', from, to },
@@ -315,31 +319,97 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
           break
         case 'ai_move':
           if (Array.isArray(lastMove?.from) && Array.isArray(lastMove?.to)) {
-            const from = lastMove.from as [number, number]
-            const to = lastMove.to as [number, number]
+            const path = (lastMove as any).path as [number, number][] | undefined
+            const finalBoard = data.board as number[][]
             const sourceBoard = useGameStore.getState().board
-            const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
-            setMoveHistory((previous) => [
-              ...previous,
-              { player: 'ai', from, to },
-            ])
+            if (path && path.length > 2) {
+              // Determine if any step in the path is a capture
+              const hasCapture = path.some((_, i) => {
+                if (i >= path.length - 1) return false
+                const dx = Math.abs(path[i][0] - path[i + 1][0])
+                const dy = Math.abs(path[i][1] - path[i + 1][1])
+                return dx > 1 && dy > 1
+              })
+              // Play eat sound once if capturing, move sound otherwise
+              if (hasCapture) {
+                playEatSound()
+              } else {
+                playMoveSound()
+              }
 
-            queueMoveAnimation(
-              data.board as number[][],
-              {
-                from,
-                to,
-                piece,
-                actor: 'ai',
-                delayMs: 0,
-                durationMs: AI_MOVE_DURATION_MS,
-              },
-              typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
-              null,
-              false,
-            )
+              // Multi-step animation: split the path into individual jumps
+              const stepDuration = Math.floor(AI_MOVE_DURATION_MS / (path.length - 1))
+              let currentBoard = sourceBoard.map(row => [...row])
+
+              for (let i = 0; i < path.length - 1; i++) {
+                const from = path[i]
+                const to = path[i + 1]
+                const isLastStep = i === path.length - 2
+                const piece = currentBoard[from[0]]?.[from[1]] ?? 0
+
+                const stepBoard = isLastStep
+                  ? finalBoard
+                  : applyPreviewMove(currentBoard, from, to)
+
+                setMoveHistory((previous) => [
+                  ...previous,
+                  { player: 'ai' as const, from, to },
+                ])
+
+                moveQueueRef.current.push({
+                  board: stepBoard,
+                  animation: {
+                    from,
+                    to,
+                    piece,
+                    actor: 'ai',
+                    delayMs: 0,
+                    durationMs: stepDuration,
+                  },
+                  nextPlayerValue: isLastStep
+                    ? (typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1)
+                    : 2,
+                  nextForcedPiece: null,
+                  isGameOver: false,
+                })
+
+                currentBoard = stepBoard
+              }
+
+              processQueuedMove()
+            } else {
+              // Single step
+              const from = lastMove.from as [number, number]
+              const to = lastMove.to as [number, number]
+              const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
+
+              // Play sound for this move
+              playSoundForMove(from, to)
+
+              setMoveHistory((previous) => [
+                ...previous,
+                { player: 'ai', from, to },
+              ])
+
+              queueMoveAnimation(
+                finalBoard,
+                {
+                  from,
+                  to,
+                  piece,
+                  actor: 'ai',
+                  delayMs: 0,
+                  durationMs: AI_MOVE_DURATION_MS,
+                },
+                typeof data.nextPlayer === 'number' ? (data.nextPlayer as number) : 1,
+                null,
+                false,
+              )
+            }
           } else {
+            // Play default sound when no move detail is available
+            playMoveSound()
             setBoard(data.board as number[][])
             setCurrentPlayer((data.nextPlayer as number) || 1)
             setForcedPiece(null)
@@ -435,6 +505,54 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     [forcedPiece, selectedPiece, setError, setSelectedPiece, ws],
   )
 
+  const surrender = useCallback(async () => {
+    const state = useGameStore.getState()
+    if (!state.gameId || state.status !== 'playing') return null
+
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (getAuthToken) {
+        const token = await getAuthToken()
+        if (token) headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch(`${API_BASE}/api/game/surrender/${state.gameId}`, {
+        method: 'POST',
+        headers,
+      })
+
+      if (!response.ok) return null
+
+      const data = await response.json()
+
+      clearTimers()
+      setMoveAnimation(null)
+      setMoveHistory([])
+      setBoard(state.board)
+      setStatus('gameOver')
+      setResult('defeat')
+      setForcedPiece(null)
+      setSelectedPiece(null)
+      setCurrentPlayer(0)
+
+      if (data.rankingUpdate) {
+        setRankingUpdate({
+          pointsEarned: data.rankingUpdate.pointsEarned,
+          leagueBefore: data.rankingUpdate.leagueBefore,
+          leagueAfter: data.rankingUpdate.leagueAfter,
+          won: false,
+          streak: data.rankingUpdate.streak,
+          totalPoints: data.rankingUpdate.totalPoints,
+        })
+      }
+
+      return data
+    } catch {
+      setError('Error al rendirse')
+      return null
+    }
+  }, [clearTimers, getAuthToken])
+
   return {
     board,
     selectedPiece,
@@ -449,5 +567,6 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     moveHistory,
     rankingUpdate,
     mode,
+    surrender,
   }
 }

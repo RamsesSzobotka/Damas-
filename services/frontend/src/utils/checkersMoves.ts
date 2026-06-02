@@ -128,5 +128,8 @@ export function applyPreviewMove(
     }
   }
 
+  if (piece === 1 && to[0] === 0) nextBoard[to[0]][to[1]] = 3
+  if (piece === 2 && to[0] === 7) nextBoard[to[0]][to[1]] = 4
+
   return nextBoard
 }

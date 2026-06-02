@@ -13,7 +13,8 @@ import { createGame, getGame } from '@/services/gameService'
 import { getDatabase } from '@/database/Database'
 import { USER_COLLECTION } from '@/models/User'
 import { USER_SKIN_COLLECTION } from '@/models/UserSkin'
-import { getDifficultyForPoints, getLeagueForPoints } from '@/services/rankingService'
+import { getDifficultyForPoints, getLeagueForPoints, updateRankingAfterGame } from '@/services/rankingService'
+import { GAME_COLLECTION } from '@/models/Game'
 
 // ---------------------------------------------------------------------------
 // WebSocket Connection Management
@@ -238,6 +239,84 @@ gameRoutes.get('/api/game/:gameId', async (c) => {
   } catch (error) {
     console.error('Error getting game:', error)
     return c.json({ error: 'Failed to get game' }, 500)
+  }
+})
+
+/**
+ * POST /api/game/surrender/:gameId
+ * Se rinde el jugador actual: marca la partida como derrota y procesa ranking si es ranked.
+ */
+gameRoutes.post('/api/game/surrender/:gameId', async (c) => {
+  try {
+    const { gameId } = c.req.param()
+    const collection = getDatabase().getCollection(GAME_COLLECTION)
+    const game = await collection.findOne({ _id: new ObjectId(gameId) })
+
+    if (!game) {
+      return c.json({ error: 'Game not found' }, 404)
+    }
+
+    if (game.status !== 'active') {
+      return c.json({ error: 'Game is not active' }, 400)
+    }
+
+    const duration = Math.floor((Date.now() - game.createdAt.getTime()) / 1000)
+
+    await collection.updateOne(
+      { _id: new ObjectId(gameId) },
+      {
+        $set: {
+          status: 'completed',
+          result: 'defeat',
+          completedAt: new Date(),
+          duration,
+        },
+      }
+    )
+
+    let rankingResult = null
+    if (game.mode === 'ranked' && game.userId) {
+      const playerPieces = game.board
+        .flat()
+        .filter((v: number) => v === 1 || v === 3).length
+      const aiPieces = game.board
+        .flat()
+        .filter((v: number) => v === 2 || v === 4).length
+
+      rankingResult = await updateRankingAfterGame(
+        game.userId,
+        {
+          won: false,
+          difficulty: game.difficulty,
+          playerPiecesLeft: playerPieces,
+          aiPiecesLeft: aiPieces,
+          totalMoves: game.totalMoves || 0,
+          durationSeconds: duration,
+          mode: 'ranked',
+        }
+      )
+    }
+
+    return c.json({
+      gameId,
+      status: 'completed',
+      result: 'defeat',
+      duration,
+      board: game.board,
+      rankingUpdate: rankingResult
+        ? {
+            pointsEarned: rankingResult.pointsEarned,
+            leagueBefore: rankingResult.leagueBefore,
+            leagueAfter: rankingResult.leagueAfter,
+            won: false,
+            streak: rankingResult.streak,
+            totalPoints: rankingResult.totalPoints,
+          }
+        : null,
+    }, 200)
+  } catch (error) {
+    console.error('Error surrendering:', error)
+    return c.json({ error: 'Failed to surrender' }, 500)
   }
 })
 

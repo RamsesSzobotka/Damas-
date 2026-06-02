@@ -157,6 +157,7 @@ const server = Bun.serve<{ gameId: string }>({
                 from: result.aiMove.from,
                 to: result.aiMove.to,
                 player: 'ai',
+                path: (result.aiMove as any).path,
               },
             })
           }

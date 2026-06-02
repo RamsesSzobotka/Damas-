@@ -17,4 +17,6 @@ export interface Move {
   from: Position
   to: Position
   captured?: Position[]
+  /** All landing positions in sequence, including from and to. e.g. [A, C, E] for A→C→E multi-capture */
+  path?: Position[]
 }
