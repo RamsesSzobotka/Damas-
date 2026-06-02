@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { calculateValidMoves, applyPreviewMove } from '@/utils/checkersMoves'
-import { playSoundForMove, playMoveSound, playEatSound } from '@/utils/playGameSound'
+import { playSoundForMove } from '@/utils/playGameSound'
 
 const API_BASE = 'http://localhost:3001'
 
@@ -132,6 +132,9 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     
     // Show the animation on the CURRENT board state
     setMoveAnimation(nextMove.animation)
+
+    // Play sound in sync with the visual animation
+    playSoundForMove(nextMove.animation.from, nextMove.animation.to)
 
     // Wait for the animation to finish
     // THEN update the board so the piece doesn't jump while animating
@@ -293,9 +296,6 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
             const sourceBoard = useGameStore.getState().board
             const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
-            // Play sound: eat if capture, move otherwise
-            playSoundForMove(from, to)
-
             setMoveHistory((previous) => [
               ...previous,
               { player: 'player', from, to },
@@ -324,20 +324,6 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
             const sourceBoard = useGameStore.getState().board
 
             if (path && path.length > 2) {
-              // Determine if any step in the path is a capture
-              const hasCapture = path.some((_, i) => {
-                if (i >= path.length - 1) return false
-                const dx = Math.abs(path[i][0] - path[i + 1][0])
-                const dy = Math.abs(path[i][1] - path[i + 1][1])
-                return dx > 1 && dy > 1
-              })
-              // Play eat sound once if capturing, move sound otherwise
-              if (hasCapture) {
-                playEatSound()
-              } else {
-                playMoveSound()
-              }
-
               // Multi-step animation: split the path into individual jumps
               const stepDuration = Math.floor(AI_MOVE_DURATION_MS / (path.length - 1))
               let currentBoard = sourceBoard.map(row => [...row])
@@ -384,9 +370,6 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
               const to = lastMove.to as [number, number]
               const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
 
-              // Play sound for this move
-              playSoundForMove(from, to)
-
               setMoveHistory((previous) => [
                 ...previous,
                 { player: 'ai', from, to },
@@ -408,8 +391,6 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
               )
             }
           } else {
-            // Play default sound when no move detail is available
-            playMoveSound()
             setBoard(data.board as number[][])
             setCurrentPlayer((data.nextPlayer as number) || 1)
             setForcedPiece(null)

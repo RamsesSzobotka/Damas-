@@ -473,7 +473,10 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
                       color: COLORS.textWhite,
                       fontFamily: 'VT323, monospace',
                       fontSize: '15px',
-                      animation: 'float 3.6s ease-in-out infinite',
+                      animationName: 'float',
+                      animationDuration: '3.6s',
+                      animationTimingFunction: 'ease-in-out',
+                      animationIterationCount: 'infinite',
                       animationDelay: `${index * 0.12}s`,
                     }}
                   >

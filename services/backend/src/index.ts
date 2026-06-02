@@ -139,15 +139,20 @@ const server = Bun.serve<{ gameId: string }>({
 
           const result = await handlePlayerMove(gameId, from, to)
 
-          // Notificar a todos los clientes de la partida
+          // Notificar a todos los clientes de la partida del movimiento del jugador
           broadcastToGame(gameId, {
             type: 'move_applied',
             board: result.boardAfterPlayerMove || result.board,
-            lastMove: result.lastMove,
+            lastMove: {
+              from: result.lastMove.from,
+              to: result.lastMove.to,
+              player: 'player',
+            },
             nextPlayer: result.nextPlayer,
             forcedPiece: result.forcedPiece,
           })
 
+          // Si la IA tiene un movimiento, enviarlo
           if (result.aiMove) {
             broadcastToGame(gameId, {
               type: 'ai_move',
