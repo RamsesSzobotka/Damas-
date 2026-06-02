@@ -27,6 +27,7 @@ shopRoute.get('/api/shop/skins', async (c) => {
       imageUrl: skin.imageUrl,
       primaryColor: skin.primaryColor,
       secondaryColor: skin.secondaryColor,
+      theme: skin.theme || null,
     }))
 
     return c.json(mapped)
@@ -128,6 +129,7 @@ shopRoute.get('/api/shop/owned-skins', async (c) => {
         primaryColor: skin?.primaryColor || null,
         secondaryColor: skin?.secondaryColor || null,
         imageUrl: skin?.imageUrl || null,
+        theme: skin?.theme || null,
       }
     })
 

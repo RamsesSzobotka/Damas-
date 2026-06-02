@@ -167,6 +167,37 @@ paymentRoute.post('/api/payment/confirm', async (c) => {
       { $inc: { soldCount: 1 } }
     )
 
+    // Handle piece_and_board packages — give component skins to user
+    if (skin.type === 'piece_and_board' && skin.components && skin.components.length > 0) {
+      const componentSkins = await skins
+        .find({ name: { $in: skin.components } })
+        .toArray()
+
+      for (const comp of componentSkins) {
+        const compUserSkinDoc = {
+          userId: user._id,
+          skinId: comp._id,
+          isEquipped: false,
+          purchaseId,
+          acquiredAt: new Date(),
+          timesUsed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+        await userSkins.insertOne(compUserSkinDoc)
+
+        await users.updateOne(
+          { _id: user._id },
+          { $push: { inventory: comp._id } } as any
+        )
+
+        await skins.updateOne(
+          { _id: comp._id },
+          { $inc: { soldCount: 1 } }
+        )
+      }
+    }
+
     return c.json({
       success: true,
       purchase: {

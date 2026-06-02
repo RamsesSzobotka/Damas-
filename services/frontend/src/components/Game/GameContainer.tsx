@@ -51,6 +51,8 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
   const [playerSecondaryColor, setPlayerSecondaryColor] = useState<string | undefined>()
   const [boardDarkColor, setBoardDarkColor] = useState<string | undefined>()
   const [boardLightColor, setBoardLightColor] = useState<string | undefined>()
+  const [pieceTheme, setPieceTheme] = useState<string | undefined>()
+  const [boardTheme, setBoardTheme] = useState<string | undefined>()
   const [playerLeague, setPlayerLeague] = useState<string | null>(null)
   const [playerPoints, setPlayerPoints] = useState<number>(0)
 
@@ -95,6 +97,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
           if (equippedPiece) {
             setPlayerSkinColor(equippedPiece.primaryColor)
             setPlayerSecondaryColor(equippedPiece.secondaryColor)
+            setPieceTheme(equippedPiece.theme)
           }
           const equippedBoard = data.ownedSkins?.find(
             (s: any) => s.isEquipped && s.equipType === 'board'
@@ -102,6 +105,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
           if (equippedBoard) {
             setBoardDarkColor(equippedBoard.primaryColor || '#1A1040')
             setBoardLightColor(equippedBoard.secondaryColor || '#4C3F91')
+            setBoardTheme(equippedBoard.theme)
           }
         }
       } catch {}
@@ -429,6 +433,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
                 playerSecondaryColor={playerSecondaryColor}
                 boardDarkColor={boardDarkColor}
                 boardLightColor={boardLightColor}
+                theme={(boardTheme || pieceTheme) as 'classic' | 'pixel' | 'cyberpunk' | undefined}
               />
             ) : (
               <p

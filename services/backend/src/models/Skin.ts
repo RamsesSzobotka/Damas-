@@ -24,6 +24,8 @@ export const SkinSchema = z.object({
   // Colores y estilos (para personalizarse)
   primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color debe ser hex válido').optional(),
   secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color debe ser hex válido').optional(),
+  theme: z.enum(['classic', 'pixel', 'cyberpunk']).optional(),
+  components: z.array(z.string()).optional(),
   
   // Disponibilidad
   isActive: z.boolean().default(true),

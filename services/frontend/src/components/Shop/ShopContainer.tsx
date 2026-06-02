@@ -42,6 +42,7 @@ interface SkinProduct {
   primaryColor: string
   secondaryColor: string
   imageUrl: string
+  theme?: string
 }
 
 function ProductCard({
@@ -51,7 +52,7 @@ function ProductCard({
   owned,
   isSignedIn,
 }: {
-  product: { id: string; name: string; description: string; price: string; rarity: string; skinId: string; primaryColor: string; secondaryColor: string; type?: string }
+  product: { id: string; name: string; description: string; price: string; rarity: string; skinId: string; primaryColor: string; secondaryColor: string; type?: string; theme?: string }
   onBuy: () => void
   purchasing: boolean
   owned: boolean
@@ -126,9 +127,14 @@ function ProductCard({
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               border: `3px solid ${owned ? '#22c55e' : primaryColor}`,
+              ...(product.theme === 'pixel'
+                ? { borderRadius: 0, imageRendering: 'pixelated' }
+                : {}),
               boxShadow: owned
                 ? `0 0 12px rgba(34, 197, 94, 0.3)`
-                : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
+                : product.theme === 'cyberpunk'
+                  ? `0 0 8px ${primaryColor}, 0 0 16px ${primaryColor}66, 0 0 24px ${primaryColor}33, inset 0 0 8px ${primaryColor}33`
+                  : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
             }}
           >
             {Array.from({ length: 16 }).map((_, i) => {
@@ -146,20 +152,36 @@ function ProductCard({
           </div>
         ) : (
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center"
+            className="w-24 h-24 flex items-center justify-center"
             style={{
               backgroundColor: `${primaryColor}22`,
               border: `3px solid ${owned ? '#22c55e' : primaryColor}`,
+              ...(product.theme === 'pixel'
+                ? { borderRadius: '8px', imageRendering: 'pixelated' }
+                : { borderRadius: '50%' }),
               boxShadow: owned
                 ? `0 0 12px rgba(34, 197, 94, 0.3), inset 0 0 8px rgba(34, 197, 94, 0.2)`
-                : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
+                : product.theme === 'cyberpunk'
+                  ? `0 0 8px ${primaryColor}, 0 0 16px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`
+                  : `0 0 12px ${primaryColor}66, inset 0 0 8px ${primaryColor}33`,
             }}
           >
             <div
-              className="w-14 h-14 rounded-full"
+              className="w-14 h-14"
               style={{
-                background: `radial-gradient(circle at 35% 35%, ${primaryColor}, ${secondaryColor})`,
-                boxShadow: `0 0 12px ${primaryColor}88, inset 0 -3px 6px rgba(0,0,0,0.4)`,
+                ...(product.theme === 'pixel'
+                  ? {
+                      borderRadius: '4px',
+                      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                      imageRendering: 'pixelated',
+                    }
+                  : {
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle at 35% 35%, ${primaryColor}, ${secondaryColor})`,
+                    }),
+                boxShadow: product.theme === 'cyberpunk'
+                  ? `0 0 6px ${primaryColor}, 0 0 12px ${primaryColor}88, 0 0 20px ${secondaryColor}44, inset 0 -3px 6px rgba(0,0,0,0.4)`
+                  : `0 0 12px ${primaryColor}88, inset 0 -3px 6px rgba(0,0,0,0.4)`,
                 border: `2px solid ${owned ? '#22c55e' : 'rgba(255,255,255,0.2)'}`,
               }}
             />
@@ -561,6 +583,7 @@ export default function ShopContainer() {
                       primaryColor: skin.primaryColor,
                       secondaryColor: skin.secondaryColor,
                       type: skin.type,
+                      theme: skin.theme,
                     }}
                     onBuy={() => handleBuy(skin._id)}
                     purchasing={purchasing}

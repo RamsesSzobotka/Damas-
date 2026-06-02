@@ -22,6 +22,7 @@ interface Props {
   playerSecondaryColor?: string
   boardDarkColor?: string
   boardLightColor?: string
+  theme?: 'classic' | 'pixel' | 'cyberpunk'
 }
 
 export default function GameBoard({
@@ -34,6 +35,7 @@ export default function GameBoard({
   playerSecondaryColor,
   boardDarkColor,
   boardLightColor,
+  theme,
 }: Props) {
   const moves = useMemo(
     () =>
@@ -46,19 +48,50 @@ export default function GameBoard({
     [moves],
   )
 
-  return (
-    <div
-      style={{
+  const getContainerStyle = (): React.CSSProperties => {
+    if (theme === 'pixel') {
+      return {
         display: 'grid',
         gridTemplateColumns: 'repeat(8, 1fr)',
         width: '100%',
         maxWidth: '480px',
         position: 'relative',
         overflow: 'hidden',
-        border: '2px solid #C026D3',
-        boxShadow: '0 0 12px rgba(192, 38, 211, 0.3)',
-      }}
-    >
+        border: '4px solid #8B4513',
+        boxShadow: '4px 4px 0 #5C2E0A, 8px 8px 0 rgba(139, 69, 19, 0.15), 0 0 12px rgba(139, 69, 19, 0.2)',
+        imageRendering: 'pixelated',
+      }
+    }
+
+    if (theme === 'cyberpunk') {
+      return {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(8, 1fr)',
+        width: '100%',
+        maxWidth: '480px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '2px solid #FF00FF',
+        boxShadow: '0 0 4px #FF00FF, 0 0 12px #FF00FF88, 0 0 24px #FF00FF44, 0 0 40px #FF00FF22, inset 0 0 8px rgba(255, 0, 255, 0.05)',
+        animation: 'pulse-neon-border 2s ease-in-out infinite',
+      }
+    }
+
+    // Classic / default
+    return {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(8, 1fr)',
+      width: '100%',
+      maxWidth: '480px',
+      position: 'relative',
+      overflow: 'hidden',
+      border: '2px solid #C026D3',
+      boxShadow: '0 0 12px rgba(192, 38, 211, 0.3)',
+    }
+  }
+
+  return (
+    <div style={getContainerStyle()}>
       {board.map((row, rowIdx) =>
         row.map((piece, colIdx) => {
           // Hide the piece if it's being animated
@@ -82,6 +115,7 @@ export default function GameBoard({
               playerSecondaryColor={playerSecondaryColor}
               darkColor={boardDarkColor}
               lightColor={boardLightColor}
+              theme={theme}
             />
           )
         }),
@@ -115,7 +149,7 @@ export default function GameBoard({
             }}
           >
             <div style={{ width: '80%', height: '80%' }}>
-              <Piece piece={moveAnimation.piece} skinColor={playerSkinColor} secondaryColor={playerSecondaryColor} />
+              <Piece piece={moveAnimation.piece} skinColor={playerSkinColor} secondaryColor={playerSecondaryColor} theme={theme} />
             </div>
           </div>
         </div>

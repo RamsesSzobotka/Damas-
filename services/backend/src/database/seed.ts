@@ -9,6 +9,10 @@ interface SeedSkin {
   secondaryColor: string
   imageUrl: string
   previewUrl: string
+  rarity?: string
+  price?: number
+  theme?: string
+  components?: string[]
 }
 
 const SEED_SKINS: SeedSkin[] = [
@@ -98,6 +102,83 @@ const SEED_SKINS: SeedSkin[] = [
     imageUrl: 'https://via.placeholder.com/200x200/4A0E3B/FFFFFF?text=Atardecer',
     previewUrl: 'https://via.placeholder.com/400x400/4A0E3B/FFFFFF?text=Tablero+Atardecer',
   },
+  // === Pixel Art Theme ===
+  {
+    name: 'Ficha Pixel',
+    description: 'Ficha con estilo pixel art retro. Un clásico de los videojuegos en tu tablero.',
+    type: 'piece',
+    rarity: 'uncommon',
+    price: 599,
+    theme: 'pixel',
+    primaryColor: '#8B4513',
+    secondaryColor: '#D2691E',
+    imageUrl: 'https://via.placeholder.com/200x200/8B4513/FFFFFF?text=Ficha+Pixel',
+    previewUrl: 'https://via.placeholder.com/400x400/8B4513/FFFFFF?text=Ficha+Pixel',
+  },
+  {
+    name: 'Tablero Pixel',
+    description: 'Tablero con estilo pixel art. Nostalgia pura en cada partida.',
+    type: 'board',
+    rarity: 'uncommon',
+    price: 599,
+    theme: 'pixel',
+    primaryColor: '#2D5A27',
+    secondaryColor: '#8FBC8F',
+    imageUrl: 'https://via.placeholder.com/200x200/2D5A27/FFFFFF?text=Tablero+Pixel',
+    previewUrl: 'https://via.placeholder.com/400x400/2D5A27/FFFFFF?text=Tablero+Pixel',
+  },
+  // === Cyberpunk / Neon Theme ===
+  {
+    name: 'Ficha Cyber',
+    description: 'Ficha cyberpunk con neón. El futuro en tus manos.',
+    type: 'piece',
+    rarity: 'uncommon',
+    price: 599,
+    theme: 'cyberpunk',
+    primaryColor: '#FF00FF',
+    secondaryColor: '#00FFFF',
+    imageUrl: 'https://via.placeholder.com/200x200/FF00FF/FFFFFF?text=Ficha+Cyber',
+    previewUrl: 'https://via.placeholder.com/400x400/FF00FF/FFFFFF?text=Ficha+Cyber',
+  },
+  {
+    name: 'Tablero Cyber',
+    description: 'Tablero cyberpunk oscuro con neón. Una experiencia visual intensa.',
+    type: 'board',
+    rarity: 'uncommon',
+    price: 599,
+    theme: 'cyberpunk',
+    primaryColor: '#0D0221',
+    secondaryColor: '#FF00FF',
+    imageUrl: 'https://via.placeholder.com/200x200/0D0221/FFFFFF?text=Tablero+Cyber',
+    previewUrl: 'https://via.placeholder.com/400x400/0D0221/FFFFFF?text=Tablero+Cyber',
+  },
+  // === Paquetes piece_and_board ===
+  {
+    name: 'Paquete Pixel',
+    description: 'Paquete completo de estilo pixel art: fichas y tablero a juego.',
+    type: 'piece_and_board',
+    rarity: 'legendary',
+    price: 2999,
+    theme: 'pixel',
+    components: ['Ficha Pixel', 'Tablero Pixel'],
+    primaryColor: '#8B4513',
+    secondaryColor: '#8FBC8F',
+    imageUrl: 'https://via.placeholder.com/200x200/8B4513/FFFFFF?text=Paquete+Pixel',
+    previewUrl: 'https://via.placeholder.com/400x400/8B4513/FFFFFF?text=Paquete+Pixel',
+  },
+  {
+    name: 'Paquete Cyber',
+    description: 'Paquete completo cyberpunk: fichas y tablero con estilo neón.',
+    type: 'piece_and_board',
+    rarity: 'legendary',
+    price: 2999,
+    theme: 'cyberpunk',
+    components: ['Ficha Cyber', 'Tablero Cyber'],
+    primaryColor: '#FF00FF',
+    secondaryColor: '#00FFFF',
+    imageUrl: 'https://via.placeholder.com/200x200/FF00FF/FFFFFF?text=Paquete+Cyber',
+    previewUrl: 'https://via.placeholder.com/400x400/FF00FF/FFFFFF?text=Paquete+Cyber',
+  },
 ]
 
 export async function seedShopSkins(): Promise<void> {
@@ -119,14 +200,16 @@ export async function seedShopSkins(): Promise<void> {
       await skinsCollection.insertOne({
         ...skin,
         type: skin.type || 'piece',
-        rarity: 'common',
-        price: 199,
+        rarity: skin.rarity || 'common',
+        price: skin.price || 199,
         currency: 'USD',
         isActive: true,
         isLimited: false,
         soldCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        ...(skin.theme ? { theme: skin.theme } : {}),
+        ...(skin.components ? { components: skin.components } : {}),
       })
 
       console.log(`  ✓ Skin "${skin.name}" creada`)
