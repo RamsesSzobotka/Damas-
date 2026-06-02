@@ -32,6 +32,15 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: '#F0F8FF',
 }
 
+// Texto oscuro para fondos claros, texto claro para fondos oscuros
+const RARITY_TEXT_COLORS: Record<string, string> = {
+  common: '#0B0D2B',
+  uncommon: '#0B0D2B',
+  rare: '#FFFFFF',
+  epic: '#1A1A1A',
+  legendary: '#0B0D2B',
+}
+
 interface SkinProduct {
   _id: string
   name: string
@@ -60,7 +69,9 @@ function ProductCard({
 }) {
   const [isHovered, setIsHovered] = useState(false)
 
-  const rarityColor = RARITY_COLORS[product.rarity.toLowerCase()] || COLORS.magenta
+  const rarityKey = product.rarity.toLowerCase()
+  const rarityColor = RARITY_COLORS[rarityKey] || COLORS.magenta
+  const rarityTextColor = RARITY_TEXT_COLORS[rarityKey] || '#FFFFFF'
   const primaryColor = product.primaryColor || '#2d2d44'
   const secondaryColor = product.secondaryColor || '#444'
 
@@ -86,7 +97,7 @@ function ProductCard({
         ...buttonStyle,
         backgroundColor: owned ? '#1a3a1a' : purchasing ? '#555' : rarityColor,
         borderColor: owned ? '#22c55e' : rarityColor,
-        color: owned ? '#22c55e' : COLORS.textWhite,
+        color: owned ? '#22c55e' : rarityTextColor,
         boxShadow: owned
           ? 'none'
           : purchasing
@@ -239,7 +250,7 @@ function ProductCard({
                 ...buttonStyle,
                 backgroundColor: rarityColor,
                 borderColor: rarityColor,
-                color: COLORS.textWhite,
+                color: rarityTextColor,
                 boxShadow: `0 0 12px ${rarityColor}`,
               }}
             >

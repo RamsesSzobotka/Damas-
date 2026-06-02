@@ -283,8 +283,20 @@ function AuthSection() {
               border: `1px solid ${COLORS.magenta}`,
             },
             userButtonPopoverActionButton: {
-              color: COLORS.textWhite,
+              color: COLORS.cyan,
               fontFamily: 'VT323, monospace',
+              fontSize: '16px',
+              transition: 'all 0.2s ease',
+              '&:hover, &:focus': {
+                color: COLORS.gold,
+                textShadow: `0 0 6px ${COLORS.cyan}`,
+              },
+            },
+            userButtonPopoverActionButtonText: {
+              color: COLORS.cyan,
+            },
+            userButtonPopoverActionButtonIcon: {
+              color: COLORS.cyan,
             },
             userPreviewMainIdentifier: {
               fontFamily: 'VT323, monospace',

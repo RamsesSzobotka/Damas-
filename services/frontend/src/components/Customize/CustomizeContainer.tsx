@@ -116,6 +116,35 @@ export default function CustomizeContainer() {
 
   const pieceSkins = ownedSkins.filter(s => s.type === 'piece')
   const boardSkins = ownedSkins.filter(s => s.type === 'board')
+  const hasEquippedPiece = pieceSkins.some(s => s.isEquipped)
+  const hasEquippedBoard = boardSkins.some(s => s.isEquipped)
+
+  async function handleUnequip(equipType?: string) {
+    playButtonSound()
+    setEquipping('default')
+    setMessage(null)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${API_BASE}/api/shop/unequip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(equipType ? { equipType } : {}),
+      })
+      if (res.ok) {
+        setOwnedSkins(prev => prev.map(s => ({ ...s, isEquipped: false })))
+        setMessage({ type: 'success', text: equipType === 'board' ? '¡Tablero predeterminado!' : '¡Fichas predeterminadas!' })
+      } else {
+        setMessage({ type: 'error', text: 'Error al quitar skin' })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Error de conexión' })
+    } finally {
+      setEquipping(null)
+    }
+  }
 
   return (
     <div
@@ -274,6 +303,91 @@ export default function CustomizeContainer() {
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-6">
+                      {/* Default piece option */}
+                      <div
+                        className="flex flex-col items-center"
+                        style={{
+                          width: '180px',
+                          backgroundColor: COLORS.spacePanel,
+                          border: `2px solid ${!hasEquippedPiece ? '#22c55e' : COLORS.cyan}`,
+                          boxShadow: !hasEquippedPiece
+                            ? `0 0 16px rgba(34, 197, 94, 0.4)`
+                            : `0 0 4px ${COLORS.cyan}66`,
+                          opacity: !hasEquippedPiece ? 1 : 0.8,
+                        }}
+                      >
+                        <div className="w-full p-4 flex flex-col items-center gap-3">
+                          {/* Default preview */}
+                          <div
+                            className="w-20 h-20 rounded-full flex items-center justify-center"
+                            style={{
+                              backgroundColor: 'rgba(255, 77, 107, 0.13)',
+                              border: `3px solid ${!hasEquippedPiece ? '#22c55e' : COLORS.cyan}`,
+                              boxShadow: !hasEquippedPiece
+                                ? `0 0 12px rgba(34, 197, 94, 0.3)`
+                                : `0 0 8px ${COLORS.cyan}44`,
+                            }}
+                          >
+                            <div
+                              className="w-12 h-12 rounded-full"
+                              style={{
+                                background: 'radial-gradient(circle at 35% 35%, #FF4D6B, #C9184A)',
+                                boxShadow: '0 0 8px rgba(255, 77, 107, 0.4), inset 0 -2px 4px rgba(0,0,0,0.4)',
+                                border: '2px solid rgba(255,255,255,0.15)',
+                              }}
+                            />
+                          </div>
+
+                          <span
+                            className="text-xs font-bold uppercase tracking-widest px-2 py-1"
+                            style={{
+                              color: COLORS.cyan,
+                              border: `1px solid ${COLORS.cyan}`,
+                              textShadow: `0 0 4px ${COLORS.cyan}`,
+                              fontFamily: 'VT323, monospace',
+                              fontSize: '12px',
+                            }}
+                          >
+                            COMMON
+                          </span>
+
+                          <h2
+                            className="font-bold uppercase tracking-widest text-center"
+                            style={{
+                              color: COLORS.textWhite,
+                              fontFamily: '"Press Start 2P", monospace',
+                              fontSize: '10px',
+                              lineHeight: 1.4,
+                              ...pixelFont,
+                            }}
+                          >
+                            PREDETERMINADO
+                          </h2>
+
+                          <button
+                            onClick={() => handleUnequip()}
+                            disabled={!hasEquippedPiece || equipping === 'default'}
+                            style={{
+                              width: '100%',
+                              padding: '10px 0',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                              fontSize: '11px',
+                              fontFamily: '"Press Start 2P", monospace',
+                              backgroundColor: !hasEquippedPiece ? '#1a3a1a' : COLORS.cyan,
+                              border: `2px solid ${!hasEquippedPiece ? '#22c55e' : COLORS.cyan}`,
+                              color: !hasEquippedPiece ? '#22c55e' : COLORS.spaceDark,
+                              cursor: !hasEquippedPiece ? 'default' : 'pointer',
+                              boxShadow: !hasEquippedPiece ? 'none' : `0 0 8px ${COLORS.cyan}`,
+                              ...pixelFont,
+                            }}
+                          >
+                            {equipping === 'default' ? '...' : !hasEquippedPiece ? 'EQUIPADO ✓' : 'EQUIPAR'}
+                          </button>
+                        </div>
+                      </div>
+
                       {pieceSkins.map(skin => {
                         const isEquipped = skin.isEquipped
                         const primaryColor = skin.primaryColor || '#2d2d44'
@@ -394,6 +508,97 @@ export default function CustomizeContainer() {
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-6">
+                      {/* Default board option */}
+                      <div
+                        className="flex flex-col items-center"
+                        style={{
+                          width: '180px',
+                          backgroundColor: COLORS.spacePanel,
+                          border: `2px solid ${!hasEquippedBoard ? '#22c55e' : COLORS.cyan}`,
+                          boxShadow: !hasEquippedBoard
+                            ? `0 0 16px rgba(34, 197, 94, 0.4)`
+                            : `0 0 4px ${COLORS.cyan}66`,
+                          opacity: !hasEquippedBoard ? 1 : 0.8,
+                        }}
+                      >
+                        <div className="w-full p-4 flex flex-col items-center gap-3">
+                          {/* Default board preview */}
+                          <div
+                            style={{
+                              width: '80px',
+                              height: '80px',
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(4, 1fr)',
+                              border: `2px solid ${!hasEquippedBoard ? '#22c55e' : COLORS.cyan}`,
+                              boxShadow: !hasEquippedBoard
+                                ? `0 0 12px rgba(34, 197, 94, 0.3)`
+                                : `0 0 8px ${COLORS.cyan}44`,
+                            }}
+                          >
+                            {Array.from({ length: 16 }).map((_, i) => {
+                              const r = Math.floor(i / 4)
+                              const c = i % 4
+                              return (
+                                <div
+                                  key={i}
+                                  style={{
+                                    backgroundColor: (r + c) % 2 !== 0 ? '#1A1040' : '#4C3F91',
+                                  }}
+                                />
+                              )
+                            })}
+                          </div>
+
+                          <span
+                            className="text-xs font-bold uppercase tracking-widest px-2 py-1"
+                            style={{
+                              color: COLORS.cyan,
+                              border: `1px solid ${COLORS.cyan}`,
+                              textShadow: `0 0 4px ${COLORS.cyan}`,
+                              fontFamily: 'VT323, monospace',
+                              fontSize: '12px',
+                            }}
+                          >
+                            COMMON
+                          </span>
+
+                          <h2
+                            className="font-bold uppercase tracking-widest text-center"
+                            style={{
+                              color: COLORS.textWhite,
+                              fontFamily: '"Press Start 2P", monospace',
+                              fontSize: '10px',
+                              lineHeight: 1.4,
+                              ...pixelFont,
+                            }}
+                          >
+                            PREDETERMINADO
+                          </h2>
+
+                          <button
+                            onClick={() => handleUnequip('board')}
+                            disabled={!hasEquippedBoard || equipping === 'default'}
+                            style={{
+                              width: '100%',
+                              padding: '10px 0',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                              fontSize: '11px',
+                              fontFamily: '"Press Start 2P", monospace',
+                              backgroundColor: !hasEquippedBoard ? '#1a3a1a' : COLORS.cyan,
+                              border: `2px solid ${!hasEquippedBoard ? '#22c55e' : COLORS.cyan}`,
+                              color: !hasEquippedBoard ? '#22c55e' : COLORS.spaceDark,
+                              cursor: !hasEquippedBoard ? 'default' : 'pointer',
+                              boxShadow: !hasEquippedBoard ? 'none' : `0 0 8px ${COLORS.cyan}`,
+                              ...pixelFont,
+                            }}
+                          >
+                            {equipping === 'default' ? '...' : !hasEquippedBoard ? 'EQUIPADO ✓' : 'EQUIPAR'}
+                          </button>
+                        </div>
+                      </div>
+
                       {boardSkins.map(skin => {
                         const isEquipped = skin.isEquipped
                         const darkColor = skin.primaryColor || '#1A1040'

@@ -179,6 +179,24 @@ const SEED_SKINS: SeedSkin[] = [
     imageUrl: 'https://via.placeholder.com/200x200/FF00FF/FFFFFF?text=Paquete+Cyber',
     previewUrl: 'https://via.placeholder.com/400x400/FF00FF/FFFFFF?text=Paquete+Cyber',
   },
+  // === Paquete Completo (todo incluido) ===
+  {
+    name: 'Paquete Completo',
+    description: 'El paquete definitivo: TODAS las fichas y tableros de la tienda en un solo pago. Desbloquea todos los estilos y personaliza tu juego a tu antojo.',
+    type: 'piece_and_board',
+    rarity: 'legendary',
+    price: 29900,
+    theme: 'classic',
+    components: [
+      'Fichas Negras', 'Fichas Amarillas', 'Fichas Verdes', 'Fichas Magenta', 'Fichas Azul Claro',
+      'Tablero Clásico', 'Tablero Noche & Día', 'Tablero Bosque', 'Tablero Atlántico', 'Tablero Atardecer',
+      'Ficha Pixel', 'Tablero Pixel', 'Ficha Cyber', 'Tablero Cyber',
+    ],
+    primaryColor: '#FFD700',
+    secondaryColor: '#C026D3',
+    imageUrl: 'https://via.placeholder.com/200x200/FFD700/FFFFFF?text=Completo',
+    previewUrl: 'https://via.placeholder.com/400x400/FFD700/FFFFFF?text=Paquete+Completo',
+  },
 ]
 
 export async function seedShopSkins(): Promise<void> {

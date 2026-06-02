@@ -53,6 +53,13 @@
   }
 }
 
+/* Hide Clerk development mode badge (backup) */
+.cl-internal-developmentBadge,
+.cl-internal-1agz6u6,
+.cl-development-mode-warning {
+  display: none !important;
+}
+
 @keyframes pulse-neon-border {
   0%, 100% {
     box-shadow: 0 0 4px #FF00FF, 0 0 12px #FF00FF88, 0 0 24px #FF00FF44, 0 0 40px #FF00FF22, inset 0 0 8px rgba(255, 0, 255, 0.05);

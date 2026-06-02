@@ -219,4 +219,65 @@ shopRoute.post('/api/shop/equip', async (c) => {
   }
 })
 
+/**
+ * POST /api/shop/unequip
+ * Des-equipa la skin activa del tipo especificado, volviendo al diseño predeterminado.
+ * Body: { equipType?: 'piece' | 'board' }
+ */
+shopRoute.post('/api/shop/unequip', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return c.json({ error: 'Token requerido' }, 401)
+    }
+
+    const sessionToken = authHeader.slice(7)
+    let clerkId: string
+    try {
+      const payload = await verifyToken(sessionToken, {
+        secretKey: process.env.CLERK_SECRET_KEY || '',
+      })
+      clerkId = payload.sub
+    } catch {
+      return c.json({ error: 'Token inválido' }, 401)
+    }
+
+    const { equipType } = await c.req.json()
+    const type = equipType || 'piece'
+
+    const users = getDatabase().getCollection(USER_COLLECTION)
+    const user = await users.findOne({ clerkId })
+    if (!user || !user._id) {
+      return c.json({ error: 'Usuario no encontrado' }, 404)
+    }
+
+    const userSkinsCol = getDatabase().getCollection(USER_SKIN_COLLECTION)
+
+    if (type === 'piece') {
+      await userSkinsCol.updateMany(
+        {
+          userId: user._id,
+          isEquipped: true,
+          $or: [
+            { equipType: 'piece' },
+            { equipType: { $exists: false } },
+            { equipType: null },
+          ],
+        },
+        { $set: { isEquipped: false, updatedAt: new Date() } }
+      )
+    } else {
+      await userSkinsCol.updateMany(
+        { userId: user._id, isEquipped: true, equipType: 'board' },
+        { $set: { isEquipped: false, updatedAt: new Date() } }
+      )
+    }
+
+    return c.json({ success: true, message: `Skin de tipo "${type}" removida. Usando diseño predeterminado.` })
+  } catch (error) {
+    console.error('Error unequipping skin:', error)
+    return c.json({ error: 'Error interno del servidor' }, 500)
+  }
+})
+
 export { shopRoute }
