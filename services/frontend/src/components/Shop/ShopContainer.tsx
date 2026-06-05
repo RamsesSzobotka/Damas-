@@ -424,14 +424,20 @@ export default function ShopContainer() {
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
         backgroundColor: COLORS.spaceDark,
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
         ...pixelFont,
       }}
     >
+      <div
+        className="absolute inset-0 bg-drift"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+        aria-hidden="true"
+      />
       <div
         className="absolute inset-0 z-[1]"
         style={{

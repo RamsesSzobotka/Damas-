@@ -68,3 +68,20 @@
     box-shadow: 0 0 8px #FF00FF, 0 0 20px #FF00FFAA, 0 0 36px #FF00FF66, 0 0 56px #FF00FF33, inset 0 0 12px rgba(255, 0, 255, 0.08);
   }
 }
+
+@keyframes bg-drift {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(-4px, -3px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.bg-drift {
+  animation: bg-drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-drift {
+    animation: none;
+  }
+}
