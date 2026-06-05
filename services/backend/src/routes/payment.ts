@@ -75,8 +75,8 @@ paymentRoute.post('/api/payment/create-checkout-session', async (c) => {
           quantity: 1,
         },
       ],
-      success_url: 'http://localhost:3000/shop?success=true&session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'http://localhost:3000/shop?canceled=true',
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop?canceled=true`,
       metadata: {
         skinId: skin._id.toString(),
         clerkId: user.clerkId,

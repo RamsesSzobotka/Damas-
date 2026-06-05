@@ -391,7 +391,7 @@ La IA no almacena partidas activas; únicamente recibe el estado del tablero, ca
 - Backend Service (Bun/Hono)
 - IA Service (Bun/Hono)
 - MongoDB
-- Nginx (proxy reverso opcional)
+
 
 ---
 
@@ -596,7 +596,7 @@ services/docker-compose.yml
 ├── backend (puerto 3001)
 ├── ia (puerto 3002)
 ├── mongodb (puerto 27017)
-└── nginx (puerto 80 - opcional)
+
 ```
 
 ---

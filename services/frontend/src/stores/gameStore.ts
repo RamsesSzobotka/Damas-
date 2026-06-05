@@ -2,6 +2,8 @@
 
 import { create } from 'zustand'
 
+type GameMode = 'practice' | 'ranked' | 'spectator' | null
+
 interface GameState {
   gameId: string | null
   board: number[][]
@@ -12,6 +14,8 @@ interface GameState {
   difficulty: string
   isLoading: boolean
   error: string | null
+  mode: GameMode
+  spectatorDelayMs: number
 
   setGameId: (id: string) => void
   setBoard: (board: number[][]) => void
@@ -22,6 +26,8 @@ interface GameState {
   setDifficulty: (difficulty: string) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setMode: (mode: GameMode) => void
+  setSpectatorDelay: (ms: number) => void
   reset: () => void
 }
 
@@ -38,6 +44,8 @@ const initialState = {
   difficulty: 'principiante',
   isLoading: false,
   error: null as string | null,
+  mode: null as GameMode,
+  spectatorDelayMs: 500,
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -52,5 +60,13 @@ export const useGameStore = create<GameState>((set) => ({
   setDifficulty: (difficulty: string) => set({ difficulty }),
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
-  reset: () => set({ ...initialState, board: createEmptyBoard() }),
+  setMode: (mode: GameMode) => set({ mode }),
+  setSpectatorDelay: (ms: number) => set({ spectatorDelayMs: ms }),
+  reset: () =>
+    set({
+      ...initialState,
+      board: createEmptyBoard(),
+      mode: null,
+      spectatorDelayMs: 500,
+    }),
 }))

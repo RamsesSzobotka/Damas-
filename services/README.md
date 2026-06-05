@@ -58,7 +58,7 @@ docker-compose down
 - **Backend API**: http://localhost:3001
 - **IA Service**: http://localhost:3002
 - **MongoDB**: mongodb://localhost:27017
-- **Nginx (si está habilitado)**: http://localhost:80
+
 
 ## 📚 Estructura
 

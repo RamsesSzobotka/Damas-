@@ -3,10 +3,13 @@
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { useWebSocket } from '@/hooks/useWebSocket'
+import { useSpectatorGame } from '@/hooks/useSpectatorGame'
 import { calculateValidMoves, applyPreviewMove } from '@/utils/checkersMoves'
 import { playSoundForMove, playKingSound } from '@/utils/playGameSound'
 
 const API_BASE = 'http://localhost:3001'
+
+type GameMode = 'practice' | 'ranked' | 'spectator' | null
 
 type MoveAnimation = {
   from: [number, number]
@@ -25,6 +28,14 @@ type PendingMove = {
   isGameOver: boolean
 }
 
+type MoveHistoryEntry = {
+  player: 'player' | 'ai'
+  from: [number, number]
+  to: [number, number]
+  capturedCount: number
+  movedAt: number
+}
+
 const PLAYER_MOVE_DURATION_MS = 700
 const AI_MOVE_DURATION_MS = 850
 const INTER_MOVE_DELAY_MS = 200
@@ -33,6 +44,23 @@ const clearTimer = (timer: ReturnType<typeof setTimeout> | null): void => {
   if (timer) {
     clearTimeout(timer)
   }
+}
+
+const countCapturedPieces = (
+  sourceBoard: number[][],
+  destBoard: number[][],
+  from: [number, number],
+  to: [number, number],
+): number => {
+  let count = 0
+  for (let r = 0; r < sourceBoard.length; r++) {
+    for (let c = 0; c < sourceBoard[r].length; c++) {
+      if (r === from[0] && c === from[1]) continue
+      if (r === to[0] && c === to[1]) continue
+      if (sourceBoard[r][c] !== 0 && destBoard[r][c] === 0) count++
+    }
+  }
+  return count
 }
 
 export interface RankingUpdate {
@@ -44,8 +72,9 @@ export interface RankingUpdate {
   totalPoints: number
 }
 
-export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'practice', getAuthToken?: () => Promise<string | null>) {
+export function useGame(difficulty: string, mode: GameMode = 'practice', getAuthToken?: () => Promise<string | null>) {
   const initialState = useGameStore.getState()
+  const isSpectator = mode === 'spectator'
 
   const [gameId, setGameIdLocal] = useState(initialState.gameId)
   const [board, setBoardLocal] = useState(initialState.board)
@@ -57,9 +86,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
   const [currentPlayer, setCurrentPlayerLocal] = useState(initialState.currentPlayer)
   const [forcedPiece, setForcedPiece] = useState<[number, number] | null>(null)
   const [moveAnimation, setMoveAnimation] = useState<MoveAnimation | null>(null)
-  const [moveHistory, setMoveHistory] = useState<
-    Array<{ player: 'player' | 'ai'; from: [number, number]; to: [number, number] }>
-  >([])
+  const [moveHistory, setMoveHistory] = useState<MoveHistoryEntry[]>([])
   const [rankingUpdate, setRankingUpdate] = useState<RankingUpdate | null>(null)
 
   const playerBoardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -129,7 +156,42 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     isProcessingMoveRef.current = true
     clearTimer(animationClearTimerRef.current)
     clearTimer(interMoveDelayTimerRef.current)
-    
+
+    // Spectator mode: skip animation, apply state + sound instantly
+    if (isSpectator) {
+      playSoundForMove(nextMove.animation.from, nextMove.animation.to)
+
+      const { piece: movingPiece, to: dest } = nextMove.animation
+      const isKingPromotion =
+        (movingPiece === 1 && dest[0] === 0) || (movingPiece === 2 && dest[0] === 7)
+      if (isKingPromotion) {
+        playKingSound()
+      }
+
+      setBoard(nextMove.board)
+      setCurrentPlayer(nextMove.nextPlayerValue)
+
+      if (nextMove.nextForcedPiece) {
+        setForcedPiece(nextMove.nextForcedPiece)
+        setSelectedPiece(nextMove.nextForcedPiece)
+      } else {
+        setForcedPiece(null)
+        setSelectedPiece(null)
+      }
+
+      if (nextMove.isGameOver) {
+        isProcessingMoveRef.current = false
+        processQueuedMove()
+        return
+      }
+
+      interMoveDelayTimerRef.current = setTimeout(() => {
+        isProcessingMoveRef.current = false
+        processQueuedMove()
+      }, 0)
+      return
+    }
+
     // Show the animation on the CURRENT board state
     setMoveAnimation(nextMove.animation)
 
@@ -176,7 +238,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
         processQueuedMove()
       }, INTER_MOVE_DELAY_MS)
     }, totalAnimationTime)
-  }, [setBoard, setCurrentPlayer, setSelectedPiece])
+  }, [setBoard, setCurrentPlayer, setSelectedPiece, isSpectator])
 
   const queueMoveAnimation = useCallback(
     (
@@ -236,8 +298,13 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
           }
         }
 
-        const body: Record<string, unknown> = { mode }
-        if (mode === 'practice') {
+        const backendMode: 'ranked' | 'practice' = isSpectator
+          ? 'practice'
+          : mode === 'ranked'
+            ? 'ranked'
+            : 'practice'
+        const body: Record<string, unknown> = { mode: backendMode }
+        if (backendMode === 'practice') {
           body.difficulty = difficulty
         }
 
@@ -267,6 +334,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     startGame()
   }, [
     difficulty,
+    isSpectator,
     mode,
     getAuthToken,
     setBoard,
@@ -302,15 +370,17 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
             const from = lastMove.from as [number, number]
             const to = lastMove.to as [number, number]
             const sourceBoard = useGameStore.getState().board
+            const destBoard = data.board as number[][]
             const piece = sourceBoard[from[0]]?.[from[1]] ?? 0
+            const capturedCount = countCapturedPieces(sourceBoard, destBoard, from, to)
 
             setMoveHistory((previous) => [
               ...previous,
-              { player: 'player', from, to },
+              { player: 'player', from, to, capturedCount, movedAt: Date.now() },
             ])
 
             queueMoveAnimation(
-              data.board as number[][],
+              destBoard,
               {
                 from,
                 to,
@@ -330,11 +400,13 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
             const path = (lastMove as any).path as [number, number][] | undefined
             const finalBoard = data.board as number[][]
             const sourceBoard = useGameStore.getState().board
+            const totalCaptured = countCapturedPieces(sourceBoard, finalBoard, lastMove.from as [number, number], lastMove.to as [number, number])
 
             if (path && path.length > 2) {
               // Multi-step animation: split the path into individual jumps
               const stepDuration = Math.floor(AI_MOVE_DURATION_MS / (path.length - 1))
               let currentBoard = sourceBoard.map(row => [...row])
+              const capturesPerStep = path.length > 1 ? Math.max(1, Math.floor(totalCaptured / (path.length - 1))) : 0
 
               for (let i = 0; i < path.length - 1; i++) {
                 const from = path[i]
@@ -346,9 +418,13 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
                   ? finalBoard
                   : applyPreviewMove(currentBoard, from, to)
 
+                const stepCaptures = isLastStep
+                  ? Math.max(0, totalCaptured - capturesPerStep * (path.length - 2))
+                  : capturesPerStep
+
                 setMoveHistory((previous) => [
                   ...previous,
-                  { player: 'ai' as const, from, to },
+                  { player: 'ai' as const, from, to, capturedCount: stepCaptures, movedAt: Date.now() },
                 ])
 
                 moveQueueRef.current.push({
@@ -380,7 +456,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
 
               setMoveHistory((previous) => [
                 ...previous,
-                { player: 'ai', from, to },
+                { player: 'ai', from, to, capturedCount: totalCaptured, movedAt: Date.now() },
               ])
 
               queueMoveAnimation(
@@ -413,6 +489,9 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
           setResult((data.result as string) || 'Game Over')
           setForcedPiece(null)
           setSelectedPiece(null)
+          if (isSpectator) {
+            useGameStore.getState().setMode(null)
+          }
           break
         case 'ranking_update':
           setRankingUpdate({
@@ -429,7 +508,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
           break
       }
     },
-    [clearTimers, queueMoveAnimation, setBoard, setCurrentPlayer, setError, setResult, setStatus],
+    [clearTimers, isSpectator, queueMoveAnimation, setBoard, setCurrentPlayer, setError, setResult, setStatus],
   )
 
   const ws = useWebSocket(wsUrl, {
@@ -437,8 +516,41 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     onError: () => setError('WebSocket connection error'),
   })
 
+  const wsRef = useRef(ws)
+  wsRef.current = ws
+
+  const handleSpectatorMove = useCallback((move: { from: [number, number]; to: [number, number] }) => {
+    const state = useGameStore.getState()
+    if (!state.gameId) return
+    const currentWs = wsRef.current
+    if (!currentWs.isConnected) return
+    currentWs.send({
+      type: 'player_move',
+      gameId: state.gameId,
+      from: move.from,
+      to: move.to,
+    })
+  }, [])
+
+  const spectator = useSpectatorGame({
+    gameId,
+    isPlaying: status === 'playing',
+    gameOver: status === 'gameOver',
+    currentPlayer,
+    onPlayerMove: handleSpectatorMove,
+  })
+
+  useEffect(() => {
+    if (!isSpectator) return
+    if (status !== 'playing') return
+    if (currentPlayer !== 1) return
+    spectator.requestNextMove()
+  }, [isSpectator, status, currentPlayer, spectator])
+
   const handleSquareClick = useCallback(
     (row: number, col: number) => {
+      if (isSpectator) return
+
       const state = useGameStore.getState()
 
       if (state.status !== 'playing' || state.currentPlayer !== 1) return
@@ -491,10 +603,11 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
 
       setSelectedPiece(null)
     },
-    [forcedPiece, selectedPiece, setError, setSelectedPiece, ws],
+    [forcedPiece, isSpectator, selectedPiece, setError, setSelectedPiece, ws],
   )
 
   const surrender = useCallback(async () => {
+    if (isSpectator) return null
     const state = useGameStore.getState()
     if (!state.gameId || state.status !== 'playing') return null
 
@@ -540,7 +653,7 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
       setError('Error al rendirse')
       return null
     }
-  }, [clearTimers, getAuthToken])
+  }, [clearTimers, getAuthToken, isSpectator])
 
   return {
     board,
@@ -556,6 +669,8 @@ export function useGame(difficulty: string, mode: 'ranked' | 'practice' = 'pract
     moveHistory,
     rankingUpdate,
     mode,
+    isSpectator,
+    stopSpectator: spectator.stop,
     surrender,
   }
 }

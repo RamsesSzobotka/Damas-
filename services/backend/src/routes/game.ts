@@ -9,12 +9,15 @@
 import { Hono } from 'hono'
 import { verifyToken } from '@clerk/backend'
 import { ObjectId } from 'mongodb'
+import { z } from 'zod'
 import { createGame, getGame } from '@/services/gameService'
 import { getDatabase } from '@/database/Database'
 import { USER_COLLECTION } from '@/models/User'
 import { USER_SKIN_COLLECTION } from '@/models/UserSkin'
 import { getDifficultyForPoints, getLeagueForPoints, updateRankingAfterGame } from '@/services/rankingService'
 import { GAME_COLLECTION } from '@/models/Game'
+import { calculateMove } from '@/services/iaClient'
+import { BOARD_SIZE } from '@/types/enums'
 
 // ---------------------------------------------------------------------------
 // WebSocket Connection Management
@@ -317,6 +320,82 @@ gameRoutes.post('/api/game/surrender/:gameId', async (c) => {
   } catch (error) {
     console.error('Error surrendering:', error)
     return c.json({ error: 'Failed to surrender' }, 500)
+  }
+})
+
+/**
+ * POST /api/game/spectator-move
+ * Solicita un movimiento de IA para una partida en modo espectador.
+ *
+ * Permite al frontend pedir el siguiente movimiento del bando "jugador"
+ * (IA 2 / IA Aliada) sin exponer la URL del servicio de IA.
+ *
+ * - No requiere autenticación (igual que practice mode)
+ * - No persiste el movimiento (solo lo calcula y lo devuelve)
+ *
+ * Body: { gameId: string }
+ * Response 200: { from, to, captured?, path? }
+ * Response 400: { error: 'invalid_gameId' | 'game_not_active' | 'invalid_board' | 'no_valid_moves' }
+ */
+const spectatorMoveSchema = z.object({
+  gameId: z.string().min(1, 'gameId es requerido'),
+})
+
+gameRoutes.post('/api/game/spectator-move', async (c) => {
+  try {
+    const body = await c.req.json()
+    const parsed = spectatorMoveSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return c.json({ error: 'invalid_gameId' }, 400)
+    }
+
+    const { gameId } = parsed.data
+
+    if (!ObjectId.isValid(gameId)) {
+      return c.json({ error: 'invalid_gameId' }, 400)
+    }
+
+    const game = await getGame(gameId)
+
+    if (!game) {
+      return c.json({ error: 'invalid_gameId' }, 400)
+    }
+
+    if (game.status !== 'active') {
+      return c.json({ error: 'game_not_active' }, 400)
+    }
+
+    const board = game.board as unknown as number[][]
+    if (!Array.isArray(board) || board.length !== BOARD_SIZE) {
+      return c.json({ error: 'invalid_board' }, 400)
+    }
+    for (const row of board) {
+      if (!Array.isArray(row) || row.length !== BOARD_SIZE) {
+        return c.json({ error: 'invalid_board' }, 400)
+      }
+      for (const cell of row) {
+        if (typeof cell !== 'number' || !Number.isInteger(cell) || cell < 0 || cell > 4) {
+          return c.json({ error: 'invalid_board' }, 400)
+        }
+      }
+    }
+
+    const aiResponse = await calculateMove(board, game.currentPlayer, game.difficulty)
+
+    if (!aiResponse) {
+      return c.json({ error: 'no_valid_moves' }, 400)
+    }
+
+    return c.json({
+      from: aiResponse.from,
+      to: aiResponse.to,
+      captured: aiResponse.captured,
+      path: aiResponse.path,
+    }, 200)
+  } catch (error) {
+    console.error('Error in spectator-move:', error)
+    return c.json({ error: 'Failed to calculate spectator move' }, 500)
   }
 })
 

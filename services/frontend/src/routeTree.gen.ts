@@ -10,15 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SpectatorIndexRouteImport } from './routes/spectator/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as CustomizeIndexRouteImport } from './routes/customize/index'
+import { Route as SpectatorWatchRouteImport } from './routes/spectator/watch'
 import { Route as GamePlayRouteImport } from './routes/game/play'
 import { Route as GameDifficultyRouteImport } from './routes/game/difficulty'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpectatorIndexRoute = SpectatorIndexRouteImport.update({
+  id: '/spectator/',
+  path: '/spectator/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopIndexRoute = ShopIndexRouteImport.update({
@@ -36,6 +43,11 @@ const CustomizeIndexRoute = CustomizeIndexRouteImport.update({
   path: '/customize/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpectatorWatchRoute = SpectatorWatchRouteImport.update({
+  id: '/spectator/watch',
+  path: '/spectator/watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GamePlayRoute = GamePlayRouteImport.update({
   id: '/game/play',
   path: '/game/play',
@@ -51,26 +63,32 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/spectator/watch': typeof SpectatorWatchRoute
   '/customize/': typeof CustomizeIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/spectator/': typeof SpectatorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/spectator/watch': typeof SpectatorWatchRoute
   '/customize': typeof CustomizeIndexRoute
   '/rankings': typeof RankingsIndexRoute
   '/shop': typeof ShopIndexRoute
+  '/spectator': typeof SpectatorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/game/difficulty': typeof GameDifficultyRoute
   '/game/play': typeof GamePlayRoute
+  '/spectator/watch': typeof SpectatorWatchRoute
   '/customize/': typeof CustomizeIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/spectator/': typeof SpectatorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,34 +96,42 @@ export interface FileRouteTypes {
     | '/'
     | '/game/difficulty'
     | '/game/play'
+    | '/spectator/watch'
     | '/customize/'
     | '/rankings/'
     | '/shop/'
+    | '/spectator/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/game/difficulty'
     | '/game/play'
+    | '/spectator/watch'
     | '/customize'
     | '/rankings'
     | '/shop'
+    | '/spectator'
   id:
     | '__root__'
     | '/'
     | '/game/difficulty'
     | '/game/play'
+    | '/spectator/watch'
     | '/customize/'
     | '/rankings/'
     | '/shop/'
+    | '/spectator/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameDifficultyRoute: typeof GameDifficultyRoute
   GamePlayRoute: typeof GamePlayRoute
+  SpectatorWatchRoute: typeof SpectatorWatchRoute
   CustomizeIndexRoute: typeof CustomizeIndexRoute
   RankingsIndexRoute: typeof RankingsIndexRoute
   ShopIndexRoute: typeof ShopIndexRoute
+  SpectatorIndexRoute: typeof SpectatorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spectator/': {
+      id: '/spectator/'
+      path: '/spectator'
+      fullPath: '/spectator/'
+      preLoaderRoute: typeof SpectatorIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shop/': {
@@ -138,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomizeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spectator/watch': {
+      id: '/spectator/watch'
+      path: '/spectator/watch'
+      fullPath: '/spectator/watch'
+      preLoaderRoute: typeof SpectatorWatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/game/play': {
       id: '/game/play'
       path: '/game/play'
@@ -159,9 +199,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameDifficultyRoute: GameDifficultyRoute,
   GamePlayRoute: GamePlayRoute,
+  SpectatorWatchRoute: SpectatorWatchRoute,
   CustomizeIndexRoute: CustomizeIndexRoute,
   RankingsIndexRoute: RankingsIndexRoute,
   ShopIndexRoute: ShopIndexRoute,
+  SpectatorIndexRoute: SpectatorIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

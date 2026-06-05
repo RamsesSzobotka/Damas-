@@ -34,7 +34,6 @@ Proyecto universitario — **Desarrollo de Software IX**.
 | | Zod | ^3.22.0 | Validación de entrada |
 | **Base de datos** | MongoDB | 7.0 | Documentos con índices |
 | **Infraestructura** | Docker Compose | - | Orquestación multi-contenedor |
-| | Nginx | Alpine | Proxy reverso (opcional) |
 
 ---
 
@@ -153,10 +152,6 @@ Damas-/
     │           ├── boardUtils.ts      # createInitialBoard, cloneBoard, applyMove
     │           └── rulesEngine.ts     # Motor de reglas completo (capturas, movimientos, fin)
     │
-    └── nginx/                         # Proxy reverso (opcional)
-        ├── nginx.conf
-        └── conf.d/
-            └── default.conf          # frontend:3000, backend:3001, ia:3002
 ```
 
 ---
@@ -205,7 +200,7 @@ Damas-/
 - **Frontend ↔ Backend**: REST para CRUD (auth, shop, rankings, creación de partidas) + WebSocket para juego en tiempo real
 - **Backend ↔ IA Service**: HTTP síncrono (`fetch`) para calcular movimiento de la IA
 - **Backend → MongoDB**: Driver nativo de MongoDB para persistencia
-- **Nginx** (opcional): Proxy reverso unificando los 3 servicios bajo un mismo dominio, con soporte WebSocket
+
 
 ---
 

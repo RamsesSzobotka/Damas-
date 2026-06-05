@@ -6,6 +6,8 @@ import { useUser, useAuth } from '@clerk/tanstack-react-start'
 import { useGame } from '@/hooks/useGame'
 import { useGameStore } from '@/stores/gameStore'
 import GameBoard from '@/components/Game/GameBoard'
+import SpeedControl from '@/components/Game/SpeedControl'
+import SpectatorStats from '@/components/Game/SpectatorStats'
 import Stars from '@/components/ui/Stars'
 import bgImage from '@/assets/background/backPlay.png'
 import { playButtonSound } from '@/utils/playButtonSound'
@@ -20,9 +22,12 @@ const COLORS = {
   textSpace: '#B0E0FF',
 } as const
 
+type GameModeProp = 'practice' | 'ranked' | 'spectator'
+
 interface Props {
   difficulty: string
   routeMode?: 'ranked' | 'practice'
+  mode?: GameModeProp
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -42,11 +47,14 @@ const LEAGUE_ICONS: Record<string, string> = {
   'Elite Cósmica': '🌟',
 }
 
-export default function GameContainer({ difficulty, routeMode = 'practice' }: Props) {
+export default function GameContainer({ difficulty, routeMode = 'practice', mode: modeProp }: Props) {
   const navigate = useNavigate()
   const { isSignedIn } = useUser()
   const { getToken } = useAuth()
   const reset = useGameStore((s) => s.reset)
+  const setMode = useGameStore((s) => s.setMode)
+  const spectatorDelayMs = useGameStore((s) => s.spectatorDelayMs)
+  const setSpectatorDelay = useGameStore((s) => s.setSpectatorDelay)
   const [playerSkinColor, setPlayerSkinColor] = useState<string | undefined>()
   const [playerSecondaryColor, setPlayerSecondaryColor] = useState<string | undefined>()
   const [boardDarkColor, setBoardDarkColor] = useState<string | undefined>()
@@ -55,9 +63,13 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
   const [boardTheme, setBoardTheme] = useState<string | undefined>()
   const [playerLeague, setPlayerLeague] = useState<string | null>(null)
   const [playerPoints, setPlayerPoints] = useState<number>(0)
+  const [spectatorStartedAt, setSpectatorStartedAt] = useState<number>(() => Date.now())
 
-  // Modo: viene del search param (routeMode). Ranked solo si autenticado.
-  const mode = routeMode === 'ranked' && isSignedIn ? 'ranked' : 'practice'
+  // Modo: si viene como prop, úsalo; si no, derivar de routeMode + isSignedIn.
+  const effectiveMode = modeProp
+    ? modeProp
+    : (routeMode === 'ranked' && isSignedIn ? 'ranked' : 'practice')
+  const isSpectator = effectiveMode === 'spectator'
 
   const getAuthToken = useMemo(
     () => isSignedIn ? async () => { try { return await getToken() } catch { return null } } : undefined,
@@ -78,7 +90,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     moveHistory,
     rankingUpdate,
     surrender,
-  } = useGame(difficulty, mode, getAuthToken)
+  } = useGame(difficulty, effectiveMode, getAuthToken)
 
   // Fetch equipped skin and board
   useEffect(() => {
@@ -115,7 +127,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
   // Cleanup on unmount
   // Fetch player's ranking info if ranked and signed in
   useEffect(() => {
-    if (!isSignedIn || mode !== 'ranked') return
+    if (!isSignedIn || effectiveMode !== 'ranked') return
     ;(async () => {
       try {
         const token = await getToken()
@@ -129,7 +141,7 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
         }
       } catch {}
     })()
-  }, [isSignedIn, mode, getToken])
+  }, [isSignedIn, effectiveMode, getToken])
 
   useEffect(() => {
     return () => {
@@ -137,15 +149,30 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     }
   }, [reset])
 
+  // Reset spectator started-at when entering spectator mode
+  useEffect(() => {
+    if (isSpectator) {
+      setSpectatorStartedAt(Date.now())
+    }
+  }, [isSpectator])
+
   const handleSurrender = async () => {
     playButtonSound()
     await surrender()
   }
 
+  const handleStopSpectator = () => {
+    playButtonSound()
+    setMode(null)
+    reset()
+    navigate({ to: '/spectator' })
+  }
+
   const handleBack = () => {
     playButtonSound()
     reset()
-    navigate({ to: '/' })
+    setMode(null)
+    navigate({ to: isSpectator ? '/spectator' : '/' })
   }
 
   const pieceCounts = useMemo(() => {
@@ -155,12 +182,17 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     return { player, ai }
   }, [board])
 
-  const turnLabel =
-    status === 'gameOver'
+  const turnLabel = (() => {
+    if (isSpectator) {
+      if (status === 'gameOver') return result || 'JUEGO TERMINADO'
+      return currentPlayer === 1 ? 'TURNO IA 2' : 'TURNO IA 1'
+    }
+    return status === 'gameOver'
       ? result || 'JUEGO TERMINADO'
       : currentPlayer === 1
         ? 'TU TURNO'
         : 'TURNO DE IA'
+  })()
 
   const recentMoves = [...moveHistory].slice(-8).reverse()
 
@@ -200,6 +232,16 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
     const s = seconds % 60
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
+
+  const gameOverHeadline = (() => {
+    if (isSpectator) {
+      if (result === 'victory') return 'GANÓ IA 2'
+      if (result === 'defeat') return 'GANÓ IA 1'
+      if (result === 'draw') return 'EMPATE'
+      return result || 'JUEGO TERMINADO'
+    }
+    return null
+  })()
 
   if (isLoading) {
     return (
@@ -307,10 +349,10 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
             }}
           >
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.cyan, fontSize: '16px' }}>
-              YOU
+              {isSpectator ? 'IA 2' : 'YOU'}
             </p>
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textWhite, fontSize: '20px' }}>
-              Red Cosmic
+              {isSpectator ? 'IA Aliada' : 'Red Cosmic'}
             </p>
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px' }}>
               Fichas: {pieceCounts.player}
@@ -346,10 +388,10 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
             }}
           >
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.magenta, fontSize: '16px' }}>
-              IA
+              {isSpectator ? 'IA 1' : 'IA'}
             </p>
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textWhite, fontSize: '20px' }}>
-              {difficulty}
+              {isSpectator ? 'IA Oponente' : difficulty}
             </p>
             <p style={{ fontFamily: 'VT323, monospace', color: COLORS.textSpace, fontSize: '15px' }}>
               Fichas: {pieceCounts.ai}
@@ -357,6 +399,24 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
 
           </div>
         </div>
+
+        {/* Spectator controls: speed + stats */}
+        {isSpectator && (
+          <div
+            className="mt-3 flex flex-wrap items-stretch justify-center gap-3"
+          >
+            <SpeedControl delayMs={spectatorDelayMs} onChange={setSpectatorDelay} />
+            <SpectatorStats
+              moveHistory={moveHistory.map((m) => ({
+                actor: m.player,
+                capturedCount: m.capturedCount,
+                movedAt: m.movedAt,
+              }))}
+              startedAt={spectatorStartedAt}
+              isGameOver={status === 'gameOver'}
+            />
+          </div>
+        )}
       </div>
 
       {/* Connection indicator */}
@@ -391,33 +451,61 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
               CONTROL
             </p>
             <div style={{ display: 'grid', gap: '8px', color: COLORS.textSpace, fontFamily: 'VT323, monospace', fontSize: '15px' }}>
-              {playerLeague && mode === 'ranked' && (
+              {playerLeague && effectiveMode === 'ranked' && (
                 <p style={{ color: LEAGUE_COLORS[playerLeague] || COLORS.cyan }}>
                   {LEAGUE_ICONS[playerLeague] || ''} {playerLeague} · {playerPoints} pts
                 </p>
               )}
               <p>IA: {difficulty}</p>
               <p>Tiempo: {formatTime(elapsed)}</p>
-              <p>Jugador: {pieceCounts.player}</p>
-              <p>IA: {pieceCounts.ai}</p>
+              {isSpectator ? (
+                <>
+                  <p style={{ color: COLORS.cyan }}>IA 2: {pieceCounts.player}</p>
+                  <p style={{ color: COLORS.magenta }}>IA 1: {pieceCounts.ai}</p>
+                </>
+              ) : (
+                <>
+                  <p>Jugador: {pieceCounts.player}</p>
+                  <p>IA: {pieceCounts.ai}</p>
+                </>
+              )}
             </div>
             <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
-              <button
-                onClick={handleSurrender}
-                style={{
-                  backgroundColor: COLORS.magenta,
-                  border: `1px solid ${COLORS.cyan}`,
-                  color: COLORS.textWhite,
-                  padding: '8px 10px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  cursor: 'pointer',
-                }}
-              >
-                Rendirse
-              </button>
+              {isSpectator ? (
+                <button
+                  onClick={handleStopSpectator}
+                  style={{
+                    backgroundColor: COLORS.magenta,
+                    border: `1px solid ${COLORS.cyan}`,
+                    color: COLORS.textWhite,
+                    padding: '8px 10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ⏹ Detener
+                </button>
+              ) : (
+                <button
+                  onClick={handleSurrender}
+                  style={{
+                    backgroundColor: COLORS.magenta,
+                    border: `1px solid ${COLORS.cyan}`,
+                    color: COLORS.textWhite,
+                    padding: '8px 10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Rendirse
+                </button>
+              )}
             </div>
           </aside>
 
@@ -486,7 +574,9 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
                     }}
                   >
                     <p style={{ color: entry.player === 'player' ? COLORS.cyan : COLORS.gold }}>
-                      {entry.player === 'player' ? 'JUGADOR' : 'IA'}
+                      {entry.player === 'player'
+                        ? (isSpectator ? 'IA 2' : 'JUGADOR')
+                        : (isSpectator ? 'IA 1' : 'IA')}
                     </p>
                     <p>
                       {entry.from[0]},{entry.from[1]} → {entry.to[0]},{entry.to[1]}
@@ -523,14 +613,15 @@ export default function GameContainer({ difficulty, routeMode = 'practice' }: Pr
               style={{
                 fontFamily: '"Press Start 2P", monospace',
                 color: result === 'victory' ? COLORS.gold : COLORS.magenta,
-                fontSize: '16px',
+                fontSize: isSpectator ? '14px' : '16px',
                 textShadow: result === 'victory'
                   ? `0 0 12px ${COLORS.gold}, 0 0 24px rgba(255, 215, 0, 0.4)`
                   : `0 0 8px ${COLORS.magenta}`,
                 marginBottom: '16px',
               }}
             >
-              {result === 'victory' ? 'VICTORIA' : result === 'defeat' ? 'DERROTA' : result}
+              {gameOverHeadline
+                ?? (result === 'victory' ? 'VICTORIA' : result === 'defeat' ? 'DERROTA' : result)}
             </p>
 
             {/* Ranking result */}

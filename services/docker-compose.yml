@@ -38,6 +38,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       IA_SERVICE_URL: http://ia:3002
       CORS_ORIGIN: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
     depends_on:
       mongodb:
         condition: service_healthy
@@ -85,25 +86,6 @@ services:
       - damas-network
     volumes:
       - ./frontend/src:/app/src
-
-  # Nginx (Reverse Proxy - Opcional)
-  nginx:
-    image: nginx:alpine
-    container_name: damas-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-    depends_on:
-      - frontend
-      - backend
-      - ia
-    networks:
-      - damas-network
-    profiles:
-      - nginx
 
 networks:
   damas-network:

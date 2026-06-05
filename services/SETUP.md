@@ -4,7 +4,7 @@
 - ✅ Frontend: `services/frontend/src/{components,hooks,services,types,pages}`
 - ✅ Backend: `services/backend/src/{routes,middleware,services,models,database,validators,utils,types}`
 - ✅ IA: `services/ia/src/{algorithms,difficulty,models,routes,utils,types}`
-- ✅ Nginx: `services/nginx/{nginx.conf,conf.d/default.conf}`
+
 
 ## 📦 Dependencias Agregadas (SIN instalar)
 
@@ -55,7 +55,7 @@
 - ✅ Backend (puerto 3001, con hot-reload)
 - ✅ IA Service (puerto 3002, con hot-reload)
 - ✅ Frontend (puerto 3000, con hot-reload)
-- ✅ Nginx (puerto 80, perfil opcional)
+
 - ✅ Network compartida: `damas-network`
 - ✅ Healthcheck para MongoDB
 
@@ -87,7 +87,6 @@
 - ✅ `.env.example` (todas las variables centralizadas)
 - ✅ `.gitignore` (configuración global)
 - ✅ `README.md` (documentación de setup)
-- ✅ `nginx/` (configuración reverse proxy)
 
 ## 🚀 Próximos Pasos
 
@@ -115,14 +114,11 @@
 - El docker-compose está configurado con hot-reload para desarrollo
 - MongoDB necesita usuario/contraseña: `admin:password` (cambiar en producción)
 - Los puertos pueden modificarse en `docker-compose.yml` si hay conflictos
-- Nginx está opcional (usar `--profile nginx` en docker-compose)
-
 ## ✨ Stack Confirmado
 - Frontend: **TanStack Start** (not Next.js or React SPA)
 - Backend: **Bun + Hono**
 - IA: **Bun + Hono**
 - Database: **MongoDB 7.0**
-- Proxy: **Nginx (opcional)**
 - Containerization: **Docker Compose**
 
 ---

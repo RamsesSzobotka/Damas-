@@ -25,12 +25,13 @@ const pixelFont = {
 interface MenuItem {
   icon: string
   label: string
-  action: 'jugar' | 'quickplay' | 'retos' | 'rankings' | 'shop' | 'customize'
+  action: 'jugar' | 'quickplay' | 'retos' | 'rankings' | 'shop' | 'customize' | 'spectator'
   description?: string
 }
 
 const MENU_ITEMS: MenuItem[] = [
   { icon: '▶', label: 'JUGAR', action: 'jugar', description: 'Partida ranked vs IA' },
+  { icon: '🛰️', label: 'ESPECTADOR', action: 'spectator', description: 'Observa 2 IAs enfrentarse' },
   { icon: '📊', label: 'RANKINGS', action: 'rankings', description: 'Tabla de puntuaciones' },
   { icon: '🛍️', label: 'TIENDA', action: 'shop', description: 'Comprar skins' },
 ]
@@ -473,6 +474,7 @@ export default function MainMenu() {
       const routes: Record<string, string> = {
         rankings: '/rankings',
         shop: '/shop',
+        spectator: '/spectator',
       }
       await navigate({ to: routes[action] })
     } catch (error) {

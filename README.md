@@ -10,49 +10,103 @@ Arquitectura de microservicios con frontend SSR y 4 niveles de IA: desde princip
 
 ```
 Damas-/
-├── Docs/                          # Documentación
-│   ├── PRD.md
-│   ├── DATABASE.md
-│   ├── DATABASE-RELATIONS.md
-│   ├── RANKING-SYSTEM.md
-│   ├── AI-ALGORITHMS.md
-│   ├── TANSTACK-START-GUIDE.md
-│   ├── wireframes/
-│   ├── desarrollo/
-│   └── agents/
+├── Docs/                              # Documentación
+│   ├── PRD.md                         # Documento de requisitos
+│   ├── DATABASE.md                    # Esquema de base de datos
+│   ├── DATABASE-RELATIONS.md          # Relaciones entre colecciones
+│   ├── RANKING-SYSTEM.md              # Sistema de puntuación y ligas
+│   ├── AI-ALGORITHMS.md               # Algoritmos de IA detallados
+│   ├── TANSTACK-START-GUIDE.md        # Guía del framework
+│   ├── agents/                        # Prompts y skills para AI agents
+│   │   ├── CONTEXT.md
+│   │   └── Skill_Damas_Universe_UIUX.md
+│   ├── desarrollo/                    # Documentación de desarrollo
+│   │   ├── PLAN-DESARROLLO.md
+│   │   ├── GUIA-VISUAL.md
+│   │   ├── AI-ALGORITHMS.md
+│   │   ├── DATABASE.md
+│   │   ├── DATABASE-RELATIONS.md
+│   │   ├── RANKING-SYSTEM.md
+│   │   ├── INDEX.md
+│   │   ├── README.md
+│   │   ├── 01-menu-principal.md
+│   │   ├── 02-seleccion-dificultad.md
+│   │   ├── 03-pantalla-juego.md
+│   │   ├── 04-rankings.md
+│   │   └── 05-tienda.md
+│   └── wireframes/                    # Maquetas visuales (imágenes)
 ├── services/
-│   ├── frontend/                  # TanStack Start (React 19 + SSR)
-│   │   └── src/
-│   │       ├── assets/
-│   │       │   ├── background/    # Imágenes de fondo
-│   │       │   └── sounds/        # Efectos de sonido
-│   │       ├── components/
-│   │       │   ├── ui/            # Componentes reutilizables (Stars)
-│   │       │   ├── Menu/          # Menú principal
-│   │       │   ├── Game/          # Tablero, fichas, dificultad
-│   │       │   ├── Shop/          # Tienda de skins
-│   │       │   ├── Customize/     # Personalización
-│   │       │   └── Rankings/      # Tabla de líderes
-│   │       ├── hooks/             # Custom hooks (useGame, useWebSocket)
-│   │       ├── routes/            # TanStack Router (file-based)
-│   │       ├── stores/            # Zustand (gameStore)
-│   │       ├── utils/             # checkersMoves, playButtonSound
-│   │       └── styles/            # globals.css
-│   ├── backend/                   # Bun + Hono (API REST + WebSocket)
-│   │   └── src/
-│   │       ├── routes/            # auth, game, payment, rankings, shop
-│   │       ├── services/          # gameService, rankingService, paymentService
-│   │       └── database/          # Conexión MongoDB + índices
-│   ├── ia/                        # Bun + Hono (Microservicio IA)
-│   │   └── src/
-│   │       ├── algorithms/        # beginner, moveGenerator
-│   │       ├── difficulty/        # intermediate, master, ultra
-│   │       ├── models/            # Board types
-│   │       ├── routes/            # calculateMove
-│   │       └── utils/             # rulesEngine (validación), boardUtils
+│   ├── frontend/                      # TanStack Start (React 19 + SSR)
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   │   ├── background/        # Imágenes de fondo (back1, back2, etc.)
+│   │   │   │   ├── game/              # Sprites del juego (earth.png)
+│   │   │   │   ├── music/             # Música de fondo (Main Theme, Shop Theme, Boss Theme)
+│   │   │   │   └── sounds/            # Efectos (buttonSound, eatSound, moveSound, king)
+│   │   │   ├── components/
+│   │   │   │   ├── ui/                # Componentes reutilizables (Stars)
+│   │   │   │   ├── Menu/              # Menú principal (MainMenu)
+│   │   │   │   ├── Game/              # Tablero, fichas, dificultad
+│   │   │   │   ├── Shop/              # Tienda de skins (ShopContainer)
+│   │   │   │   ├── Customize/         # Personalización (CustomizeContainer)
+│   │   │   │   └── Rankings/          # Tabla de líderes (RankingsContainer)
+│   │   │   ├── hooks/                 # Custom hooks (useGame, useWebSocket, useBackgroundMusic)
+│   │   │   ├── routes/                # TanStack Router (file-based)
+│   │   │   │   ├── index.tsx          # Página principal (menú)
+│   │   │   │   ├── __root.tsx         # Layout raíz + ClerkProvider + tema
+│   │   │   │   ├── game/
+│   │   │   │   │   ├── difficulty.tsx # Selección de dificultad
+│   │   │   │   │   └── play.tsx       # Pantalla de juego
+│   │   │   │   ├── customize/index.tsx
+│   │   │   │   ├── rankings/index.tsx
+│   │   │   │   └── shop/index.tsx
+│   │   │   ├── stores/                # Zustand (gameStore)
+│   │   │   ├── styles/                # globals.css + Tailwind
+│   │   │   ├── test/                  # Config test (setup.ts)
+│   │   │   ├── utils/                 # checkersMoves, playButtonSound, playGameSound
+│   │   │   ├── client.tsx             # Entry point cliente
+│   │   │   ├── router.tsx             # Config TanStack Router
+│   │   │   ├── routeTree.gen.ts       # Árbol de rutas generado
+│   │   │   └── ssr.tsx                # Entry point SSR
+│   │   ├── vite.config.ts
+│   │   ├── tailwind.config.ts
+│   │   ├── tsconfig.json
+│   │   ├── postcss.config.js
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   ├── backend/                       # Bun + Hono (API REST + WebSocket)
+│   │   ├── src/
+│   │   │   ├── routes/                # auth, game, payment, rankings, shop
+│   │   │   ├── services/              # gameService, rankingService, userService, iaClient
+│   │   │   ├── models/                # Mongoose schemas (User, Game, Ranking, Skin, etc.)
+│   │   │   ├── database/              # Conexión MongoDB + seed
+│   │   │   ├── types/                 # TypeScript interfaces/enums
+│   │   │   └── index.ts               # Entry point (Hono app)
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── Dockerfile
+│   │   └── .env.example
+│   ├── ia/                            # Bun + Hono (Microservicio IA)
+│   │   ├── src/
+│   │   │   ├── algorithms/            # beginner, moveGenerator
+│   │   │   ├── difficulty/            # intermediate, master, ultra
+│   │   │   ├── models/                # Board types
+│   │   │   ├── routes/                # calculateMove
+│   │   │   ├── utils/                 # rulesEngine (validación), boardUtils
+│   │   │   └── index.ts               # Entry point
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── Dockerfile
+│   │   └── .env.example
 │   ├── docker-compose.yml
 │   ├── .env.example
-│   └── nginx/                     # Config proxy reverso (opcional)
+│   ├── .env
+│   ├── .gitignore
+│   ├── DOCKER_COMMANDS.md
+│   ├── README.md
+│   └── SETUP.md
+├── .opencode/                         # Config AI agent skills
+├── .agent/                            # Reglas para AI agent
 └── README.md
 ```
 
@@ -110,7 +164,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Esto inicia 5 contenedores:
+Esto inicia 4 contenedores:
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
@@ -118,7 +172,7 @@ Esto inicia 5 contenedores:
 | `backend` | 3001 | API REST + WebSocket (Bun + Hono) |
 | `ia` | 3002 | Motor de IA (Bun + Hono) |
 | `frontend` | 3000 | Interfaz SSR (TanStack Start) |
-| `nginx` | 80/443 | Proxy reverso (opcional, `--profile nginx`) |
+
 
 ```bash
 # Ver logs
@@ -202,7 +256,6 @@ Frontend (3000) ──WebSocket──▶ Backend (3001) ──HTTP──▶ IA (
 | | Zod | Validación de entradas |
 | **Base de datos** | MongoDB 7.0 | Documentos + índices |
 | **Infraestructura** | Docker Compose | Contenedores multi-servicio |
-| | Nginx (opcional) | Proxy reverso |
 
 ### Variables de entorno requeridas
 
@@ -213,6 +266,35 @@ Frontend (3000) ──WebSocket──▶ Backend (3001) ──HTTP──▶ IA (
 | `STRIPE_SECRET_KEY` | API key secreta de Stripe |
 | `STRIPE_WEBHOOK_SECRET` | Webhook signing secret de Stripe |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Publishable key del frontend de Stripe |
+
+## 🔐 Autenticación (Clerk)
+
+La autenticación usa **Clerk** con modal embebido (`SignInButton mode="modal"`):
+
+- **Registro/Inicio**: Modal con email/password + Google OAuth
+- **Sesión persistente**: Clerk maneja sesiones automáticamente (cookies + tokens)
+- **Backend**: Cada request protegido verifica el token vía `@clerk/backend` → `verifyToken()`
+- **Sincronización**: Al iniciar sesión, se sincroniza el perfil de Clerk con MongoDB (`POST /api/auth/sync`)
+- **Tema**: Modal con estilo retro-neon (magenta, gold, cyan, fuente Press Start 2P / VT323)
+- **UserButton**: Popover con avatar, "Manage account" y "Sign out" estilizado
+
+## 💳 Pagos (Stripe)
+
+Integración con Stripe para la tienda de skins:
+
+- `POST /api/payment/create-checkout-session` → crea sesión de pago
+- `POST /api/payment/confirm` → confirma compra y asigna skin al usuario
+- Webhook `STRIPE_WEBHOOK_SECRET` para eventos asíncronos
+
+## 🧪 Testing
+
+```bash
+# Frontend (Vitest + Testing Library)
+cd services/frontend && npx vitest
+
+# Backend (Bun test)
+cd services/backend && bun test
+```
 
 ### MongoDB — Colecciones
 
@@ -235,9 +317,8 @@ Frontend (3000) ──WebSocket──▶ Backend (3001) ──HTTP──▶ IA (
 | Backend API | http://localhost:3001 |
 | IA Service | http://localhost:3002 |
 | MongoDB | mongodb://localhost:27017 |
-| Nginx | http://localhost:80 |
 
 ---
 
-**Versión:** 2.0  
+**Versión:** 2.1  
 **Última actualización:** Junio 2026
