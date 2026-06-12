@@ -18,16 +18,21 @@ export const UserStatsSchema = z.object({
   currentStreak: z.number().default(0),
 })
 
+export const AuthProvider = z.enum(['clerk', 'email', 'both'])
+export type AuthProvider = z.infer<typeof AuthProvider>
+
 export const UserSchema = z.object({
   _id: z.instanceof(ObjectId).optional(),
-  clerkId: z.string().min(1, 'Clerk ID es requerido'),
+  clerkId: z.string().optional(),
   email: z.string().email('Email inválido'),
   username: z.string().min(3, 'Username debe tener al menos 3 caracteres'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   avatar: z.string().url('Avatar debe ser una URL válida').optional(),
+  authProvider: AuthProvider.default('clerk'),
+  passwordHash: z.string().optional(),
   stats: UserStatsSchema,
-  inventory: z.array(z.instanceof(ObjectId)).default([]), // Referencias a skins compradas
+  inventory: z.array(z.instanceof(ObjectId)).default([]),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
   lastLoginAt: z.date().optional(),

@@ -1,21 +1,14 @@
-import { Board, Move, AI } from '@models/Board'
-import { getAllValidMoves } from '@utils/rulesEngine'
-import { getCaptureMoves, getRandomMove } from '@algorithms/moveGenerator'
-
 /**
- * Beginner AI strategy:
- *   1. If any capture move exists → execute the first available capture.
- *   2. Otherwise → pick a random valid move.
- * Returns null if no moves are available.
+ * Principiante — A* con profundidad 1.
+ *
+ * Evalúa cada movimiento posible con la heurística y elige el mejor.
+ * Equivalente a "greedy best-first" pero usando la misma función f(n) de A*.
  */
+
+import { Board, Move, AI } from '@models/Board'
+import { asteriskSearch } from '@algorithms/astar'
+
 export function getBeginnerMove(board: Board, player: number = AI): Move | null {
-  const moves = getAllValidMoves(board, player)
-  if (moves.length === 0) return null
-
-  const captures = getCaptureMoves(moves)
-  if (captures.length > 0) {
-    return captures[0]
-  }
-
-  return getRandomMove(moves)
+  const result = asteriskSearch(board, player, 1)
+  return result.bestMove
 }
