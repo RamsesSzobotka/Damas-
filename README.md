@@ -2,7 +2,7 @@
 
 Plataforma moderna de juego de damas (checkers) con inteligencia artificial, sistema de rankings, personalización visual y autenticación.
 
-Arquitectura de microservicios con frontend SSR y 4 niveles de IA: desde principiante (movimientos aleatorios) hasta ultra (minimax con poda alfa-beta, tabla de transposición y búsqueda iterativa).
+Arquitectura de microservicios con frontend SSR y 4 niveles de IA basados en A* puro: desde principiante (profundidad 1) hasta ultra (IDA* con búsqueda iterativa hasta profundidad 10).
 
 ---
 
@@ -39,10 +39,10 @@ Damas-/
 │   ├── frontend/                      # TanStack Start (React 19 + SSR)
 │   │   ├── src/
 │   │   │   ├── assets/
-│   │   │   │   ├── background/        # Imágenes de fondo (back1, back2, etc.)
-│   │   │   │   ├── game/              # Sprites del juego (earth.png)
-│   │   │   │   ├── music/             # Música de fondo (Main Theme, Shop Theme, Boss Theme)
-│   │   │   │   └── sounds/            # Efectos (buttonSound, eatSound, moveSound, king)
+│   │   │   │   ├── background/        # Imágenes de fondo
+│   │   │   │   ├── game/              # Sprites del juego
+│   │   │   │   ├── music/             # Música de fondo
+│   │   │   │   └── sounds/            # Efectos de sonido
 │   │   │   ├── components/
 │   │   │   │   ├── ui/                # Componentes reutilizables (Stars)
 │   │   │   │   ├── Menu/              # Menú principal (MainMenu)
@@ -114,23 +114,34 @@ Damas-/
 
 ## 🧠 Algoritmo de la IA
 
-Servicio independiente (`services/ia/`) con 4 dificultades progresivas:
+Servicio independiente (`services/ia/`) con 4 niveles de dificultad, todos basados en **A\* puro** (sin minimax, sin alfa-beta, sin Monte Carlo):
 
-| Nivel | Algoritmo | Profundidad | Técnicas |
-|-------|-----------|-------------|----------|
-| **🌌 Principiante** | Greedy | 1 | Captura disponible → movimiento aleatorio |
-| **⚡ Intermedio** | A* heurístico | 1 | Evalúa cada movimiento posible, elige el de mejor puntuación. Heurística: material (+1 ficha, +3 rey), control del centro, avance |
-| **🧠 Master** | Minimax + poda α-β | 4 | Árbol de juego completo con poda. Ordenación de movimientos (capturas primero). Heurística: material, centro, avance, seguridad en bordes |
-| **👾 Ultra** | Minimax + α-β + TT + ID | 8+ | Tabla de transposición (caché de posiciones), búsqueda iterativa (depth 1→8), límite de tiempo (5s), bestMove cacheado como primer candidato, corte temprano en posición ganadora (>90000) |
+| Nivel | Algoritmo | Profundidad | Límite tiempo |
+|-------|-----------|:-----------:|:------------:|
+| **🌌 Principiante** | A* puro | 1 | — |
+| **⚡ Intermedio** | A* puro | 2 | — |
+| **🧠 Master** | A* puro | 4 | 2s |
+| **👾 Ultra** | IDA* (Iterative Deepening A*) | 1→10 | 5s |
 
-### Heurística de evaluación (Master y Ultra)
+### Motor A\* (`services/ia/src/algorithms/astar.ts`)
+
+| Componente | Implementación |
+|------------|---------------|
+| **Open set** | `PriorityQueue<AStarNode>` con inserción ordenada O(log n) |
+| **Closed set** | `Set<string>` con hash de tablero |
+| **`g(n)`** | `depthWeight × depth` |
+| **`h(n)`** | `evaluateBoard()` — material (ficha=1, rey=3), centro, avance, bordes |
+| **`f(n)`** | `f = g − h` (turno IA) o `f = g + h` (turno oponente) |
+
+### Heurística de evaluación
 
 ```
-score = material + centerBonus + advanceBonus + edgeBonus
-  material:  +1 ficha normal, +3 rey
-  center:    (3 - |row - 3.5|) * 0.1 + (3 - |col - 3.5|) * 0.1
-  advance:   (7 - row) * 0.08  (IA)  |  row * 0.08  (jugador)
-  edge:      col == 0 || col == 7 ? 0.05 : 0
+score = material + centerBonus + advanceBonus + edgeBonus + materialAdvantage
+  material:    +1 ficha normal, +3 rey
+  center:      (3 - |row - 3.5|) * 0.1 + (3 - |col - 3.5|) * 0.1
+  advance:     (7 - row) * 0.08  (IA)  |  row * 0.08  (jugador)
+  edge:        col == 0 || col == 7 ? 0.05 : 0
+  advantage:   materialDiff > 3 ? materialDiff * 0.2 : 0
 ```
 
 ### Reglas del juego validadas
@@ -187,7 +198,7 @@ docker compose down
 ```bash
 # Terminal 1 - Frontend
 cd services/frontend
-npm install && npm run dev
+bun install && bun run dev
 
 # Terminal 2 - Backend
 cd services/backend
@@ -242,7 +253,6 @@ Frontend (3000) ──WebSocket──▶ Backend (3001) ──HTTP──▶ IA (
 |------|-----------|-----------|
 | **Frontend** | TanStack Start (React 19) | Meta-framework SSR full-stack |
 | | TanStack Router | Routing tipado con file-based |
-| | TanStack Query | Data fetching y caché |
 | | Zustand | Estado global del juego |
 | | TailwindCSS 3 | Estilos utilitarios |
 | | Clerk | Autenticación (modal + sesiones) |
@@ -264,19 +274,31 @@ Frontend (3000) ──WebSocket──▶ Backend (3001) ──HTTP──▶ IA (
 | `CLERK_SECRET_KEY` | API key del backend de Clerk |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Publishable key del frontend de Clerk |
 | `STRIPE_SECRET_KEY` | API key secreta de Stripe |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret de Stripe |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Publishable key del frontend de Stripe |
+| `JWT_SECRET` | Secreto para firmar tokens JWT (registro email/password) |
+| `SALT_PASSWORD` | Pepper para hashear contraseñas con bcrypt |
 
-## 🔐 Autenticación (Clerk)
+## 🔐 Autenticación (Clerk + Email/Password)
 
-La autenticación usa **Clerk** con modal embebido (`SignInButton mode="modal"`):
+La plataforma ofrece dos sistemas de autenticación:
 
-- **Registro/Inicio**: Modal con email/password + Google OAuth
+### Clerk (principal)
+- **Registro/Inicio**: Modal con email/password + Google OAuth + Microsoft OAuth
 - **Sesión persistente**: Clerk maneja sesiones automáticamente (cookies + tokens)
+- **Las contraseñas las gestiona Clerk** en sus servidores — no se almacenan localmente
 - **Backend**: Cada request protegido verifica el token vía `@clerk/backend` → `verifyToken()`
 - **Sincronización**: Al iniciar sesión, se sincroniza el perfil de Clerk con MongoDB (`POST /api/auth/sync`)
-- **Tema**: Modal con estilo retro-neon (magenta, gold, cyan, fuente Press Start 2P / VT323)
-- **UserButton**: Popover con avatar, "Manage account" y "Sign out" estilizado
+
+### Email/Password propio (alternativa)
+- Endpoints `POST /api/auth/register` y `POST /api/auth/login`
+- Contraseñas hasheadas con **bcrypt + pepper** (Bun.password.hash, costo 10)
+- Sesión con **JWT** (HS256, 7 días de expiración)
+- Los usuarios se sincronizan automáticamente con Clerk
+
+### UI
+- Tema retro-neon (magenta, gold, cyan, fuente Press Start 2P / VT323)
+- Modal de Clerk con botones sociales y formulario de email
+- `UserButton` con avatar, "Manage account" y "Sign out" estilizado
 
 ## 💳 Pagos (Stripe)
 
@@ -289,8 +311,11 @@ Integración con Stripe para la tienda de skins:
 ## 🧪 Testing
 
 ```bash
-# Frontend (Vitest + Testing Library)
-cd services/frontend && npx vitest
+# Frontend - Unit tests (Vitest + Testing Library)
+cd services/frontend && bunx vitest
+
+# Frontend - E2E tests (Playwright)
+cd services/frontend && bun run test:e2e
 
 # Backend (Bun test)
 cd services/backend && bun test
@@ -320,5 +345,5 @@ cd services/backend && bun test
 
 ---
 
-**Versión:** 2.1  
+**Versión:** 2.2  
 **Última actualización:** Junio 2026

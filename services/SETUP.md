@@ -8,7 +8,7 @@
 
 ## 📦 Dependencias Agregadas (SIN instalar)
 
-### Frontend (Node.js 20, npm)
+### Frontend (Bun)
 ```json
 {
   "@tanstack/react-query": "^5.28.0",
@@ -92,7 +92,7 @@
 
 1. **Instalar dependencias:**
    ```bash
-   cd frontend && npm install
+   cd frontend && bun install
    cd ../backend && bun install
    cd ../ia && bun install
    ```

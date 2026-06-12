@@ -244,8 +244,7 @@ Frontend → Stripe payment → Backend procesar → Crear purchase → Crear us
 
 - [ ] MongoDB corriendo (local o Docker)
 - [ ] Variables de entorno configuradas
-- [ ] `npm install` en backend
-- [ ] `bun install` en backend (si usa Bun)
+- [ ] `bun install` en backend
 - [ ] Ejecutar `setupDatabase()`
 - [ ] Verificar índices en MongoDB Compass
 - [ ] Ejecutar queries de ejemplo

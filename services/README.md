@@ -25,7 +25,7 @@ cp .env.example .env
 ```bash
 # Frontend
 cd frontend
-npm install
+bun install
 cd ..
 
 # Backend
@@ -144,11 +144,11 @@ docker-compose up -d
 
 ### Frontend
 ```bash
-npm run dev         # Desarrollo
-npm run build       # Build
-npm start           # Producción
-npm run type-check  # TypeScript check
-npm run lint        # ESLint
+bun run dev         # Desarrollo
+bun run build       # Build
+bun start           # Producción
+bun run type-check  # TypeScript check
+bun run lint        # ESLint
 ```
 
 ### Backend & IA
@@ -166,8 +166,8 @@ bun typecheck       # TypeScript check
 ```bash
 # Terminal 1 - Frontend
 cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 
 # Terminal 2 - Backend
 cd backend
@@ -213,7 +213,7 @@ lsof -i :3002  # IA
 ```bash
 # Limpiar e reinstalar
 rm -rf node_modules
-bun install  # o npm install
+bun install
 ```
 
 ## 📖 Recursos
