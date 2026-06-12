@@ -37,9 +37,10 @@ test.describe('Navigation', () => {
     await page.getByText('JUGAR').click({ force: true })
     await page.waitForTimeout(500)
 
-    await expect(page.getByText('ELIGE UN MODO')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText('RANKED')).toBeVisible()
-    await expect(page.getByText('RETOS')).toBeVisible()
-    await expect(page.getByText('PERSONALIZACIÓN')).toBeVisible()
+  const gameDialog = page.getByRole('dialog', { name: 'Opciones de juego' })
+
+  await expect(gameDialog.getByRole('button', { name: 'RANKED' })).toBeVisible()
+  await expect(gameDialog.getByRole('button', { name: 'RETOS' })).toBeVisible()
+  await expect(gameDialog.getByRole('button', { name: 'PERSONALIZACIÓN' })).toBeVisible()
   })
 })
