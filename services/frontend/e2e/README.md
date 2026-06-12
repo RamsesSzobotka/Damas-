@@ -23,7 +23,7 @@ bun run test:e2e:ui
 bunx playwright test e2e/home.spec.ts
 ```
 
-## File Structure
+## Test Files
 
 ```
 e2e/
@@ -31,8 +31,30 @@ e2e/
 ├── home.spec.ts           # Smoke test — page loads, title, main menu visible
 ├── auth.spec.ts           # Auth flow — sign-in button, Clerk modal
 ├── navigation.spec.ts     # Navigation — menu buttons, page routing
+├── game.spec.ts           # Game engine — board, pieces, difficulty, API
 └── screenshots/           # Screenshots captured during tests (gitignored)
 ```
+
+## Game Engine Tests (`game.spec.ts`)
+
+Tests the core game engine in three areas:
+
+### UI Flow Tests (require frontend only)
+- **Difficulty selection**: Navigates from home → JUGAR → RETOS → difficulty page
+- **Game navigation**: Selects a difficulty and verifies redirect to game play page
+
+### Board Rendering Tests (require frontend + backend + IA)
+- **Info panels**: Verifies YOU/IA labels, piece counts, timer, difficulty, surrender button
+- **Board layout**: Checks the 8×8 grid has 64 squares
+
+### API Tests (require backend running on port 3001)
+- **Game creation**: Validates POST /api/game/create returns 8×8 board with 12 player pieces + 12 AI pieces
+- **Validation**: Rejects missing/invalid difficulty
+- **GET game**: Fetches created game by ID, validates status/board/currentPlayer
+- **404 handling**: Returns 404 for unknown game IDs
+
+> **Note**: Game rendering and API tests require the backend stack (`docker compose up -d backend ia`).
+> If the backend is unreachable, these tests gracefully skip.
 
 ## Configuration
 
