@@ -86,13 +86,6 @@ export function removeGameConnection(gameId: string, ws: GameWS): void {
   }
 }
 
-/**
- * Obtiene las conexiones activas de una partida (para inspección/depuración).
- */
-export function getGameConnections(gameId: string): Set<GameWS> | undefined {
-  return gameConnections.get(gameId)
-}
-
 // ---------------------------------------------------------------------------
 // REST Routes
 // ---------------------------------------------------------------------------

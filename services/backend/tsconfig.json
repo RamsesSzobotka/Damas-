@@ -20,9 +20,7 @@
       "@routes/*": ["./src/routes/*"],
       "@services/*": ["./src/services/*"],
       "@models/*": ["./src/models/*"],
-      "@middleware/*": ["./src/middleware/*"],
-      "@types/*": ["./src/types/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@types/*": ["./src/types/*"]
     }
   },
   "include": ["src/**/*"],

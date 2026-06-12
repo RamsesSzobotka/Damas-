@@ -156,10 +156,17 @@ export async function registerWithEmail(input: RegisterInput): Promise<{
       username: input.username,
       password: input.password,
       skipPasswordChecks: true,
-      skipPasswordRequirement: false,
+      skipPasswordRequirement: true,
     })
   } catch (clerkError: any) {
-    console.error('Error creando usuario en Clerk:', clerkError)
+    // Log detallado del error de Clerk para diagnóstico
+    console.error('Error creando usuario en Clerk:', {
+      message: clerkError.message,
+      status: clerkError.status,
+      statusText: clerkError.statusText,
+      clerkTraceId: clerkError.clerkTraceId,
+      errors: JSON.stringify(clerkError.errors, null, 2),
+    })
     // Si Clerk falla, no crear el usuario local
     throw new Error('Error al crear cuenta en Clerk: ' + (clerkError.message || 'Error desconocido'))
   }
@@ -246,7 +253,10 @@ export async function loginWithEmail(input: LoginInput): Promise<User> {
  * Usa criptografía nativa de Bun para firmar.
  */
 export async function generateToken(userId: string, clerkId: string): Promise<string> {
-  const jwtSecret = process.env.JWT_SECRET || 'damas-dev-secret'
+  const jwtSecret = process.env.JWT_SECRET
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET environment variable is required')
+  }
   const payload = {
     sub: userId,
     clerkId,
@@ -283,12 +293,4 @@ export async function getUserByClerkId(clerkId: string): Promise<User | null> {
   return (await collection.findOne({ clerkId })) as User | null
 }
 
-export async function getUserById(id: string): Promise<User | null> {
-  const collection = getDatabase().getCollection(USER_COLLECTION)
-  return (await collection.findOne({ _id: new ObjectId(id) })) as User | null
-}
 
-export async function getUserByEmail(email: string): Promise<User | null> {
-  const collection = getDatabase().getCollection(USER_COLLECTION)
-  return (await collection.findOne({ email })) as User | null
-}

@@ -10,11 +10,9 @@ import { ObjectId } from 'mongodb'
 import { getDatabase } from '@/database/Database'
 import { RANKING_COLLECTION } from '@/models/Ranking'
 import { USER_COLLECTION } from '@/models/User'
-import { GAME_COLLECTION } from '@/models/Game'
 import { LEAGUES } from '@/types/enums'
 import type { Ranking } from '@/models/Ranking'
 import type { User } from '@/models/User'
-import type { Game } from '@/models/Game'
 
 // =========================================================================
 // Tipos
@@ -388,15 +386,6 @@ export async function updateRankingAfterGame(
     streak: newStreak,
     totalPoints: newTotalPoints,
   }
-}
-
-/**
- * Obtiene el ranking de un usuario por su ID de usuario (MongoDB).
- */
-export async function getUserRanking(userId: ObjectId): Promise<(Ranking & { _id: ObjectId }) | null> {
-  const db = getDatabase()
-  const rankingsCol = db.getCollection(RANKING_COLLECTION)
-  return await rankingsCol.findOne({ userId }) as (Ranking & { _id: ObjectId }) | null
 }
 
 /**

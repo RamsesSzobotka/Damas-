@@ -21,7 +21,6 @@
       "@difficulty/*": ["./src/difficulty/*"],
       "@models/*": ["./src/models/*"],
       "@routes/*": ["./src/routes/*"],
-      "@types/*": ["./src/types/*"],
       "@utils/*": ["./src/utils/*"]
     }
   },

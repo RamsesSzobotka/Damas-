@@ -6,7 +6,7 @@ const MOVE_VOLUME = 0.3
 const EAT_VOLUME = 0.6
 const KING_VOLUME = 0.5
 
-export function playMoveSound() {
+function playMoveSound() {
   try {
     const audio = new Audio(moveSoundSrc)
     audio.volume = MOVE_VOLUME
@@ -18,7 +18,7 @@ export function playMoveSound() {
   }
 }
 
-export function playEatSound() {
+function playEatSound() {
   try {
     const audio = new Audio(eatSoundSrc)
     audio.volume = EAT_VOLUME

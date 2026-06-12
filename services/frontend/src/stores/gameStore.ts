@@ -20,7 +20,6 @@ interface GameState {
   setGameId: (id: string) => void
   setBoard: (board: number[][]) => void
   setCurrentPlayer: (player: number) => void
-  selectPiece: (pos: [number, number] | null) => void
   setStatus: (status: 'idle' | 'playing' | 'gameOver') => void
   setResult: (result: string | null) => void
   setDifficulty: (difficulty: string) => void
@@ -54,7 +53,6 @@ export const useGameStore = create<GameState>((set) => ({
   setGameId: (id: string) => set({ gameId: id }),
   setBoard: (board: number[][]) => set({ board }),
   setCurrentPlayer: (player: number) => set({ currentPlayer: player }),
-  selectPiece: (pos: [number, number] | null) => set({ selectedPiece: pos }),
   setStatus: (status: 'idle' | 'playing' | 'gameOver') => set({ status }),
   setResult: (result: string | null) => set({ result }),
   setDifficulty: (difficulty: string) => set({ difficulty }),

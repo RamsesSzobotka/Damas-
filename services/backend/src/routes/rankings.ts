@@ -11,7 +11,6 @@
 
 import { Hono } from 'hono'
 import { verifyToken } from '@clerk/backend'
-import { ObjectId } from 'mongodb'
 import { getDatabase } from '@/database/Database'
 import { USER_COLLECTION } from '@/models/User'
 import { GAME_COLLECTION } from '@/models/Game'

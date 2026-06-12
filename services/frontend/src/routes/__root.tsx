@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
   Outlet,
@@ -6,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
-import { ClerkProvider } from '@clerk/tanstack-react-start'
+import { ClerkProvider, useClerk } from '@clerk/tanstack-react-start'
 import iconFavicon from '@/assets/background/icon.jpg'
 import '../styles/globals.css'
 
@@ -44,10 +45,42 @@ function RootComponent() {
         appearance={clerkAppearance}
         localization={clerkLocalization}
       >
+        <ClerkUICustomizer />
         <Outlet />
       </ClerkProvider>
     </RootDocument>
   )
+}
+
+/**
+ * Intenta activar confirmación de contraseña desde el frontend.
+ * Si no funciona, activarlo manualmente en Clerk Dashboard:
+ *   → User & Authentication → Sign-up, Sign-in Options → Password
+ *   → Toggle "Require password confirmation on sign-up"
+ */
+function ClerkUICustomizer() {
+  const clerk = useClerk()
+
+  useEffect(() => {
+    try {
+      const c = clerk as any
+      if (typeof c.__experimental_setUICustomization === 'function') {
+        c.__experimental_setUICustomization({
+          signUp: {
+            fields: {
+              password_confirm: {
+                enabled: true,
+              },
+            },
+          },
+        })
+      }
+    } catch {
+      // Ignorar si no es soportado por la versión de Clerk
+    }
+  }, [clerk])
+
+  return null
 }
 
 const clerkAppearance = {
@@ -313,14 +346,29 @@ const clerkLocalization = {
     social: {
       providerDividerText: 'o continúa con',
     },
+    emailLink: {
+      title: 'Verifica tu correo',
+      subtitle: 'Te enviamos un enlace mágico',
+    },
   },
   formFieldLabel__emailAddress: 'Correo electrónico',
   formFieldLabel__password: 'Contraseña',
+  formFieldLabel__username: 'Nombre de usuario',
+  formFieldLabel__confirmPassword: 'Confirmar contraseña',
+  formFieldLabel__phoneNumber: 'Teléfono',
+  formFieldLabel__firstName: 'Nombre',
+  formFieldLabel__lastName: 'Apellido',
   formButtonPrimary: 'Continuar',
   formFieldAction__useAnotherMethod: 'Usar otro método',
   dividerText: 'o',
   footerActionLink__signIn: '¿Ya tienes cuenta? Inicia sesión',
   footerActionLink__signUp: '¿No tienes cuenta? Regístrate',
+  formFieldError__passwordMismatch: 'Las contraseñas no coinciden',
+  formFieldError__notValidPassword: 'La contraseña debe tener al menos 6 caracteres',
+  formFieldError__notValidEmail: 'Correo electrónico inválido',
+  formFieldError__identifierExists: 'Este correo o nombre de usuario ya está registrado',
+  formFieldError__required: 'Este campo es requerido',
+  formFieldError__minLength: 'Debe tener al menos {minLength} caracteres',
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {

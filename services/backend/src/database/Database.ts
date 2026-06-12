@@ -6,7 +6,6 @@ import {
   SKIN_COLLECTION, SKIN_INDEXES,
   PURCHASE_COLLECTION, PURCHASE_INDEXES,
   USER_SKIN_COLLECTION, USER_SKIN_INDEXES,
-  AI_ANALYTIC_COLLECTION, AI_ANALYTIC_INDEXES,
 } from '../models/index'
 
 export class Database {
@@ -66,10 +65,6 @@ export class Database {
       // User Skins
       await this.createCollection(USER_SKIN_COLLECTION)
       await this.createIndexes(USER_SKIN_COLLECTION, USER_SKIN_INDEXES)
-
-      // AI Analytics
-      await this.createCollection(AI_ANALYTIC_COLLECTION)
-      await this.createIndexes(AI_ANALYTIC_COLLECTION, AI_ANALYTIC_INDEXES)
 
       console.log('✅ Colecciones e índices inicializados correctamente')
     } catch (error) {

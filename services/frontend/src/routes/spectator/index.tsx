@@ -6,7 +6,7 @@ import SpectatorSetup, { type SpectatorDifficulty } from '@/components/Spectator
 import bgImage from '@/assets/background/backPlay.png'
 import Stars from '@/components/ui/Stars'
 
-export const SPECTATOR_DIFFICULTIES: SpectatorDifficulty[] = [
+const SPECTATOR_DIFFICULTIES: SpectatorDifficulty[] = [
   { icon: '🌌', label: 'PRINCIPIANTE', value: 'principiante', description: 'Movimientos simples, profundidad 1-2' },
   { icon: '⚡', label: 'INTERMEDIO', value: 'intermedio', description: 'Evalúa capturas y defensa básica' },
   { icon: '🧠', label: 'MASTER', value: 'master', description: 'Analiza múltiples escenarios (A*)' },

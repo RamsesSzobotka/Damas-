@@ -7,7 +7,8 @@ import { useSpectatorGame } from '@/hooks/useSpectatorGame'
 import { calculateValidMoves, applyPreviewMove } from '@/utils/checkersMoves'
 import { playSoundForMove, playKingSound } from '@/utils/playGameSound'
 
-const API_BASE = 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
 
 type GameMode = 'practice' | 'ranked' | 'spectator' | null
 
@@ -347,7 +348,7 @@ export function useGame(difficulty: string, mode: GameMode = 'practice', getAuth
   ])
 
   const wsUrl = useMemo(
-    () => (gameId ? `ws://localhost:3001/ws?gameId=${gameId}` : null),
+    () => (gameId ? `${WS_BASE}/ws?gameId=${gameId}` : null),
     [gameId],
   )
 
@@ -668,9 +669,6 @@ export function useGame(difficulty: string, mode: GameMode = 'practice', getAuth
     moveAnimation,
     moveHistory,
     rankingUpdate,
-    mode,
-    isSpectator,
-    stopSpectator: spectator.stop,
     surrender,
   }
 }

@@ -208,12 +208,12 @@ function AuthSection() {
   const syncedRef = useRef(false)
 
   const syncUser = useCallback(async () => {
-    if (!isSignedIn || !user || syncedRef.current) return
-    syncedRef.current = true
+    if (!isSignedIn || !user) return
+    if (syncedRef.current) return
 
     try {
       const token = await getToken()
-      await fetch(`${API_BASE}/api/auth/sync`, {
+      const res = await fetch(`${API_BASE}/api/auth/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,13 +228,18 @@ function AuthSection() {
           avatar: user.imageUrl || undefined,
         }),
       })
+      if (res.ok) {
+        syncedRef.current = true
+      } else {
+        console.warn('Sync respondió con error, se reintentará en el próximo montaje')
+      }
     } catch (err) {
       console.error('Error syncing user with backend:', err)
     }
   }, [isSignedIn, user, getToken])
 
   useEffect(() => {
-    if (isSignedIn && user && !syncedRef.current) {
+    if (isSignedIn && user) {
       syncUser()
     }
   }, [isSignedIn, user, syncUser])
@@ -247,21 +252,23 @@ function AuthSection() {
 
   if (!isSignedIn) {
     return (
-      <SignInButton mode="modal">
-        <button
-          className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-200"
-          style={{
-            backgroundColor: COLORS.spacePanel,
-            border: `2px solid ${COLORS.cyan}`,
-            color: COLORS.cyan,
-            boxShadow: `0 0 4px ${COLORS.cyan}`,
-            cursor: 'pointer',
-            ...pixelFont,
-          }}
-        >
-          INICIAR SESIÓN
-        </button>
-      </SignInButton>
+      <div className="flex items-center gap-2">
+        <SignInButton mode="modal">
+          <button
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-200"
+            style={{
+              backgroundColor: COLORS.spacePanel,
+              border: `2px solid ${COLORS.cyan}`,
+              color: COLORS.cyan,
+              boxShadow: `0 0 4px ${COLORS.cyan}`,
+              cursor: 'pointer',
+              ...pixelFont,
+            }}
+          >
+            INICIAR SESIÓN
+          </button>
+        </SignInButton>
+      </div>
     )
   }
 

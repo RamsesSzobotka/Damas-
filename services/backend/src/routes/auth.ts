@@ -16,7 +16,6 @@ import {
   registerWithEmail,
   loginWithEmail,
   generateToken,
-  getUserByEmail,
 } from '@/services/userService'
 import { initializeRanking } from '@/services/rankingService'
 
@@ -215,7 +214,10 @@ authRoute.get('/api/auth/me', async (c) => {
     }
 
     // Verificar firma
-    const jwtSecret = process.env.JWT_SECRET || 'damas-dev-secret'
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      return c.json({ error: 'JWT_SECRET environment variable is required' }, 500)
+    }
     const headerB64 = parts[0]
     const payloadB64 = parts[1]
     const signatureB64 = parts[2]

@@ -2,23 +2,14 @@
  * Tipos y constantes globales del backend
  */
 
-export enum Difficulty {
-  BEGINNER = 'beginner',
-  INTERMEDIATE = 'intermediate',
-  MASTER = 'master',
-  ULTRA = 'ultra',
-}
-
 export enum GameStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
-  ABANDONED = 'abandoned',
 }
 
 export enum GameResult {
   VICTORY = 'victory',
   DEFEAT = 'defeat',
-  DRAW = 'draw',
 }
 
 export enum SkinType {

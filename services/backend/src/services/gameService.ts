@@ -486,42 +486,30 @@ export async function handlePlayerMove(
   let gameOver = false
   let result: string | undefined
 
-  if (aiResponse) {
-    // Aplicar movimiento de la IA
-    currentBoard = applyMoveToBoard(
-      currentBoard,
-      aiResponse.from,
-      aiResponse.to,
-      aiResponse.captured,
-    )
-    aiMoveResult = aiResponse
+  // Aplicar movimiento de la IA
+  currentBoard = applyMoveToBoard(
+    currentBoard,
+    aiResponse.from,
+    aiResponse.to,
+    aiResponse.captured,
+  )
+  aiMoveResult = aiResponse
 
-    const aiMoveRecord = {
-      from: [aiResponse.from[0], aiResponse.from[1]],
-      to: [aiResponse.to[0], aiResponse.to[1]],
-      movedAt: new Date(),
-      capturedPieces: aiResponse.captured,
-    }
-    movesToPush.push(aiMoveRecord)
+  const aiMoveRecord = {
+    from: [aiResponse.from[0], aiResponse.from[1]],
+    to: [aiResponse.to[0], aiResponse.to[1]],
+    movedAt: new Date(),
+    capturedPieces: aiResponse.captured,
+  }
+  movesToPush.push(aiMoveRecord)
 
-    // Verificar si el jugador perdió (sin fichas o sin movimientos)
-    const playerPieces = currentBoard
-      .flat()
-      .filter((v: number) => v === 1 || v === 3).length
-    if (playerPieces === 0 || !hasValidMoves(currentBoard, true)) {
-      gameOver = true
-      result = 'defeat'
-    }
-  } else {
-    // La IA no tiene movimientos disponibles
-    // Verificar si la IA perdió (sin fichas o sin movimientos)
-    const aiPieces = currentBoard
-      .flat()
-      .filter((v: number) => v === 2 || v === 4).length
-    if (aiPieces === 0 || !hasValidMoves(currentBoard, false)) {
-      gameOver = true
-      result = 'victory'
-    }
+  // Verificar si el jugador perdió (sin fichas o sin movimientos)
+  const playerPieces = currentBoard
+    .flat()
+    .filter((v: number) => v === 1 || v === 3).length
+  if (playerPieces === 0 || !hasValidMoves(currentBoard, true)) {
+    gameOver = true
+    result = 'defeat'
   }
 
   // Construir actualización de MongoDB
@@ -536,9 +524,7 @@ export async function handlePlayerMove(
     playerMoves: 1,
   }
 
-  if (aiResponse) {
-    $inc.aiMoves = 1
-  }
+  $inc.aiMoves = 1
 
   if (gameOver) {
     $set.status = 'completed'
